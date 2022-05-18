@@ -1,11 +1,10 @@
-package lk.ijse.dep8.tasks;
+package lk.ijse.dep8.tasks.listener;
 
 import javax.annotation.Resource;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
 import javax.sql.DataSource;
-import java.awt.image.DataBuffer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
