@@ -47,11 +47,11 @@ public class HttpResponseErrorMessage implements Serializable {
     }
 
     public String getException() {
-        return exception;
+        return System.getProperty("app.profile.active").equals("dev")?exception:null;
     }
 
     public void setException(String exception) {
-        this.exception = exception;
+     this.exception=exception;
     }
 
     public String getMessage() {
