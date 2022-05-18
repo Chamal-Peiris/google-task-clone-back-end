@@ -22,7 +22,7 @@ CREATE TABLE task
     title        VARCHAR(200)                      NOT NULL,
     details      VARCHAR(500),
     position     INT                                        DEFAULT 0,
-    status       ENUM ('COMPLETED', 'needsAction') NOT NULL DEFAULT 'needsAction',
+    status       ENUM ('completed', 'needsAction') NOT NULL DEFAULT 'needsAction',
     task_list_id INT                               NOT NULL,
     CONSTRAINT FOREIGN KEY fk_task (task_list_id) REFERENCES task_list (id)
 );
@@ -35,5 +35,5 @@ CREATE TABLE sub_task
     position INT                                        DEFAULT 0,
     status   ENUM ('COMPLETED', 'needsAction') NOT NULL DEFAULT 'needsAction',
     task_id  INT                               NOT NULL,
-    CONSTRAINT FOREIGN KEY fk_task (task_id) REFERENCES task_list (id)
+    CONSTRAINT FOREIGN KEY fk_task (task_id) REFERENCES task (id)
 );
