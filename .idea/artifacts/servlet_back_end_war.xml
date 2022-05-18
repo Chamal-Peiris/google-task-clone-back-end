@@ -7,7 +7,7 @@
         <packaging>war</packaging>
       </options>
     </properties>
-    <root id="archive" name="servlet-back-end-1.0-SNAPSHOT.war">
+    <root id="archive" name="tasks.war">
       <element id="artifact" artifact-name="servlet-back-end:war exploded" />
     </root>
   </artifact>
