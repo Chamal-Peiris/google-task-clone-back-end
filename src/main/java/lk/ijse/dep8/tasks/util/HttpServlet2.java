@@ -3,6 +3,7 @@ package lk.ijse.dep8.tasks.util;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 import lk.ijse.dep8.tasks.listener.LogInitializer;
+import org.apache.commons.httpclient.HttpStatus;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -34,15 +35,15 @@ public class HttpServlet2 extends HttpServlet {
             HttpResponseErrorMessage errorMsg = null;
             if (t instanceof ResponseStatusException){
                 ResponseStatusException rse = (ResponseStatusException) t;
+                resp.setStatus(rse.getStatus());
                 errorMsg = new HttpResponseErrorMessage(new Date().getTime(),
-                        rse.getStatus(), "Internal Server Error",
+                        rse.getStatus(), HttpStatus.getStatusText(rse.getStatus()),
                         sw.toString(), t.getMessage(), req.getRequestURI());
             }else{
                 errorMsg = new HttpResponseErrorMessage(new Date().getTime(),
                         500, "Internal Server Error",
                         sw.toString(), t.getMessage(), req.getRequestURI());
             }
-
 
             Jsonb jsonb = JsonbBuilder.create();
             jsonb.toJson(errorMsg, resp.getWriter());
