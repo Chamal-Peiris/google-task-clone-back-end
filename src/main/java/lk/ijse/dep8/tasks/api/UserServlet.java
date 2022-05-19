@@ -10,6 +10,7 @@ import javax.servlet.annotation.*;
 import javax.sql.DataSource;
 import java.io.IOException;
 
+@MultipartConfig(location = "/tmp",maxFileSize = 10*2024*1024)
 @WebServlet(name = "UserServlet", value = {"/users/*"})
 public class UserServlet extends HttpServlet2 {
     @Resource(name = "java:comp/env/jdbc/pool")
@@ -22,7 +23,7 @@ public class UserServlet extends HttpServlet2 {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        if (request.getContentType() == null || request.getContentType().startsWith("multipart/form-data")) {
+        if (request.getContentType() == null || !request.getContentType().startsWith("multipart/form-data")) {
             response.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE, "Invalid content type or no content type is provided");
             return;
         }
