@@ -158,6 +158,7 @@ public class UserServlet extends HttpServlet2 {
 
     }
 
+
     private UserDTO getUser(HttpServletRequest req){
         if (!(req.getPathInfo() != null &&
                 (req.getPathInfo().length() == 37 ||
