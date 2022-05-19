@@ -12,6 +12,7 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 import javax.servlet.annotation.*;
 import javax.sql.DataSource;
+import javax.swing.text.html.HTML;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,6 +26,8 @@ import java.util.UUID;
 @MultipartConfig(location = "/tmp", maxFileSize = 10 * 2024 * 1024)
 @WebServlet(name = "UserServlet", value = {"/v1/users/*"})
 public class UserServlet extends HttpServlet2 {
+
+
     @Resource(name = "java:comp/env/jdbc/pool")
     private volatile DataSource pool;
 
@@ -134,6 +137,24 @@ public class UserServlet extends HttpServlet2 {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
+        UserDTO user = getUser(req);
+       try(Connection connection = pool.getConnection()){
+           PreparedStatement stm = connection.prepareStatement("DELETE FROM user WHERE id=?");
+           stm.setString(1, user.getId());
+           if(stm.executeUpdate()!=1){
+               throw new SQLException("Failed to delete the user");
+           }
+           resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+
+           new Thread(()->{
+               Path imagePath = Paths.get(getServletContext().getRealPath("/"), "uploads", user.getId());
+
+
+           }).start();
+       } catch (SQLException e) {
+           throw new ResponseStatusException(500,e.getMessage(),e);
+       }
 
     }
 
