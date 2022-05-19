@@ -28,37 +28,17 @@ public class UserServlet extends HttpServlet2 {
     @Resource(name = "java:comp/env/jdbc/pool")
     private volatile DataSource pool;
 
+
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        if (!(req.getPathInfo() != null &&
-                (req.getPathInfo().length() == 37 ||
-                        req.getPathInfo().length() == 38 && req.getPathInfo().endsWith("/")))){
-            throw new ResponseStatusException(404, "Not found");
-        }
-        String userId=req.getPathInfo().replace("/","");
-      try(Connection connection = pool.getConnection()){
-          PreparedStatement stm = connection.prepareStatement("SELECT * FROM user WHERE id=?");
-          stm.setString(1,userId);
-          ResultSet rst = stm.executeQuery();
-          if(!rst.next()){
-              throw new ResponseStatusException(404,"Invalid User Id");
-          }else{
-              String name=rst.getString("full_name");
-              String email=rst.getString("email");
-              String password=rst.getString("password");
-              String picture=rst.getString("profile_pic");
-              UserDTO userDTO = new UserDTO(userId, name, email, password, picture);
-              Jsonb jsonb = JsonbBuilder.create();
-              resp.setContentType("application/json");
-              jsonb.toJson(userDTO,resp.getWriter());
+
+        UserDTO user = getUser(req);
+        Jsonb jsonb = JsonbBuilder.create();
+        resp.setContentType("application./json");
+        jsonb.toJson(user,resp.getWriter());
 
 
-          }
-
-
-      } catch (SQLException e) {
-          throw new RuntimeException(e);
-      }
     }
 
     @Override
@@ -149,6 +129,39 @@ public class UserServlet extends HttpServlet2 {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
+    }
+
+    private UserDTO getUser(HttpServletRequest req){
+        if (!(req.getPathInfo() != null &&
+                (req.getPathInfo().length() == 37 ||
+                        req.getPathInfo().length() == 38 && req.getPathInfo().endsWith("/")))){
+            throw new ResponseStatusException(404, "Not found");
+        }
+        String userId=req.getPathInfo().replace("/","");
+        try(Connection connection = pool.getConnection()){
+            PreparedStatement stm = connection.prepareStatement("SELECT * FROM user WHERE id=?");
+            stm.setString(1,userId);
+            ResultSet rst = stm.executeQuery();
+            if(!rst.next()){
+                throw new ResponseStatusException(404,"Invalid User Id");
+            }else{
+                String name=rst.getString("full_name");
+                String email=rst.getString("email");
+                String password=rst.getString("password");
+                String picture=rst.getString("profile_pic");
+                return new UserDTO(userId, name, email, password, picture);
+
+            }
+
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 }
