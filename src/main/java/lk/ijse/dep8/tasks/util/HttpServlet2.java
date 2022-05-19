@@ -2,8 +2,6 @@ package lk.ijse.dep8.tasks.util;
 
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
-import lk.ijse.dep8.tasks.listener.LogInitializer;
-import org.apache.commons.httpclient.HttpStatus;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -17,7 +15,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class HttpServlet2 extends HttpServlet {
-    private  Logger logger = Logger.getLogger(LogInitializer.class.getName());
+
+    private final Logger logger = Logger.getLogger(HttpServlet2.class.getName());
+
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
@@ -37,11 +37,11 @@ public class HttpServlet2 extends HttpServlet {
                 ResponseStatusException rse = (ResponseStatusException) t;
                 resp.setStatus(rse.getStatus());
                 errorMsg = new HttpResponseErrorMessage(new Date().getTime(),
-                        rse.getStatus(), HttpStatus.getStatusText(rse.getStatus()),
+                        rse.getStatus(),
                         sw.toString(), t.getMessage(), req.getRequestURI());
             }else{
                 errorMsg = new HttpResponseErrorMessage(new Date().getTime(),
-                        500, "Internal Server Error",
+                        500,
                         sw.toString(), t.getMessage(), req.getRequestURI());
             }
 
