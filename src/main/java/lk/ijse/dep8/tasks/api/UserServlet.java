@@ -9,9 +9,16 @@ import javax.servlet.http.*;
 import javax.servlet.annotation.*;
 import javax.sql.DataSource;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
-@MultipartConfig(location = "/tmp",maxFileSize = 10*2024*1024)
-@WebServlet(name = "UserServlet", value = {"/users/*"})
+@MultipartConfig(location = "/tmp", maxFileSize = 10 * 2024 * 1024)
+@WebServlet(name = "UserServlet", value = {"/v1/users/*"})
 public class UserServlet extends HttpServlet2 {
     @Resource(name = "java:comp/env/jdbc/pool")
     private volatile DataSource pool;
@@ -27,6 +34,12 @@ public class UserServlet extends HttpServlet2 {
             response.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE, "Invalid content type or no content type is provided");
             return;
         }
+
+
+        if (request.getPathInfo() != null && !request.getPathInfo().equals("/")) {
+            throw new ResponseStatusException(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Invalid end point for a POST request");
+        }
+
         String name = request.getParameter("name");
         String email = request.getParameter("email");
         String password = request.getParameter("password");
@@ -41,6 +54,39 @@ public class UserServlet extends HttpServlet2 {
         } else if (picture != null && !picture.getContentType().startsWith("image/")) {
             throw new ResponseStatusException(HttpServletResponse.SC_BAD_REQUEST, "Invalid Image type");
         }
+
+        String appLocation = getServletContext().getRealPath("/");
+        Path path = Paths.get(appLocation, "uploads");
+        if (Files.notExists(path)) {
+            Files.createDirectory(path);
+        }
+
+        try (Connection connection = pool.getConnection()) {
+            connection.setAutoCommit(false);
+
+            PreparedStatement stm = connection.prepareStatement("INSERT  INTO user (id,email,password,full_name) VALUES (UUID(),?,?,?)");
+            stm.setString(1, email);
+            stm.setString(2, password);
+            stm.setString(2, name);
+            if (stm.executeUpdate() != 1) {
+                throw new SQLException("Failed to register the user");
+            }
+            stm = connection.prepareStatement("SELECT * FROM user WHERE email=?");
+            stm.setString(1, email);
+            ResultSet rst = stm.executeQuery();
+            rst.next();
+            String uuid= rst.getString("id");
+
+            Path imagePath = path.resolve(uuid);
+            System.out.println(imagePath);
+
+
+
+            connection.rollback();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
 
     }
 }
