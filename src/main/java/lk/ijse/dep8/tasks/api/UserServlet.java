@@ -31,11 +31,10 @@ public class UserServlet extends HttpServlet2 {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        if (request.getContentType() == null || !request.getContentType().startsWith("multipart/form-data")) {
-            response.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE, "Invalid content type or no content type is provided");
-            return;
-        }
 
+        if (request.getContentType() == null || !request.getContentType().startsWith("multipart/form-data")) {
+            throw new ResponseStatusException(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE, "Invalid content type or no content type is provided");
+        }
 
         if (request.getPathInfo() != null && !request.getPathInfo().equals("/")) {
             throw new ResponseStatusException(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Invalid end point for a POST request");
@@ -47,22 +46,19 @@ public class UserServlet extends HttpServlet2 {
         Part picture = request.getPart("picture");
 
         if (name == null || !name.matches("[A-Za-z ]+")) {
-            throw new ResponseStatusException(HttpServletResponse.SC_BAD_REQUEST, "Invalid Name or name not provided");
+            throw new ResponseStatusException(HttpServletResponse.SC_BAD_REQUEST, "Invalid name or name is empty");
         } else if (email == null || !email.matches("(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])")) {
-            throw new ResponseStatusException(HttpServletResponse.SC_BAD_REQUEST, "Invalid Email or email not provided");
+            throw new ResponseStatusException(HttpServletResponse.SC_BAD_REQUEST, "Invalid email or email is empty");
         } else if (password == null || password.trim().isEmpty()) {
-            throw new ResponseStatusException(HttpServletResponse.SC_BAD_REQUEST, "Invalid password, or password cannot be empty");
-        } else if (picture != null && !picture.getContentType().startsWith("image/")) {
-            throw new ResponseStatusException(HttpServletResponse.SC_BAD_REQUEST, "Invalid Image type");
+            throw new ResponseStatusException(HttpServletResponse.SC_BAD_REQUEST, "Password can't be empty");
+        } else if (picture != null && !picture.getContentType().startsWith("image")) {
+            throw new ResponseStatusException(HttpServletResponse.SC_BAD_REQUEST, "Invalid picture");
         }
 
-        String appLocation = getServletContext().getRealPath("/");
-        Path path = Paths.get(appLocation, "uploads");
-        if (Files.notExists(path)) {
-            Files.createDirectory(path);
-        }
-        try (Connection connection = pool.getConnection()) {
-            //connection.setAutoCommit(false);
+        Connection connection = null;
+        try{
+            connection = pool.getConnection();
+            connection.setAutoCommit(false);
 
             PreparedStatement stm = connection.
                     prepareStatement("INSERT INTO user (id, email, password, full_name, profile_pic) VALUES (?, ?, ?, ?, ?)");
@@ -72,7 +68,8 @@ public class UserServlet extends HttpServlet2 {
             stm.setString(3, password);
             stm.setString(4, name);
 
-            String pictureUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + getServletContext().getContextPath();
+            String pictureUrl = request.getScheme() + "://" + request.getServerName() + ":"
+                    + request.getServerPort() + request.getContextPath();
             pictureUrl += "/uploads/" + id ;
 
             stm.setString(5, pictureUrl);
@@ -80,15 +77,30 @@ public class UserServlet extends HttpServlet2 {
                 throw new SQLException("Failed to register the user");
             }
 
-            //saving the image to the uploads directly
+            String appLocation = getServletContext().getRealPath("/");
+            Path path = Paths.get(appLocation, "uploads");
+            if (Files.notExists(path)) {
+                Files.createDirectory(path);
+            }
 
-            picture.write(path.resolve(id).toAbsolutePath().toString());
+            String picturePath = path.resolve(id).toAbsolutePath().toString();
+            picture.write(picturePath);
 
-            //connection.rollback();
+            if (Files.notExists(Paths.get(picturePath))){
+                throw new ResponseStatusException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to save the picture");
+            }
+
+            connection.commit();
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new ResponseStatusException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to register the user");
+        }finally{
+            try {
+                connection.rollback();
+                connection.setAutoCommit(true);
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
-
-
     }
 }
