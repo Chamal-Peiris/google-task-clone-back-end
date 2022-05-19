@@ -32,14 +32,13 @@ public class UserServlet extends HttpServlet2 {
     private volatile DataSource pool;
 
 
-
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
         UserDTO user = getUser(req);
         Jsonb jsonb = JsonbBuilder.create();
         resp.setContentType("application./json");
-        jsonb.toJson(user,resp.getWriter());
+        jsonb.toJson(user, resp.getWriter());
 
 
     }
@@ -72,12 +71,12 @@ public class UserServlet extends HttpServlet2 {
 
 
         Connection connection = null;
-        try{
+        try {
             connection = pool.getConnection();
 
             PreparedStatement stm = connection.prepareStatement("SELECT id FROM user WHERE email = ?");
             stm.setString(1, email);
-            if (stm.executeQuery().next()){
+            if (stm.executeQuery().next()) {
                 throw new ResponseStatusException(HttpServletResponse.SC_CONFLICT, "A user has been already registered with this email");
             }
 
@@ -91,26 +90,34 @@ public class UserServlet extends HttpServlet2 {
             stm.setString(3, DigestUtils.sha256Hex(password));
             stm.setString(4, name);
 
-            String pictureUrl = request.getScheme() + "://" + request.getServerName() + ":"
-                    + request.getServerPort() + request.getContextPath();
-            pictureUrl += "/uploads/" + id ;
+            String pictureUrl = null;
+            if (picture != null) {
+                pictureUrl = request.getScheme() + "://" + request.getServerName() + ":"
+                        + request.getServerPort() + request.getContextPath();
+                pictureUrl += "/uploads/" + id;
 
-            stm.setString(5, pictureUrl);
+                stm.setString(5, pictureUrl);
+            } else {
+                stm.setString(5, null);
+            }
+
             if (stm.executeUpdate() != 1) {
                 throw new SQLException("Failed to register the user");
             }
 
-            String appLocation = getServletContext().getRealPath("/");
-            Path path = Paths.get(appLocation, "uploads");
-            if (Files.notExists(path)) {
-                Files.createDirectory(path);
-            }
+            if (picture != null) {
+                String appLocation = getServletContext().getRealPath("/");
+                Path path = Paths.get(appLocation, "uploads");
+                if (Files.notExists(path)) {
+                    Files.createDirectory(path);
+                }
 
-            String picturePath = path.resolve(id).toAbsolutePath().toString();
-            picture.write(picturePath);
+                String picturePath = path.resolve(id).toAbsolutePath().toString();
+                picture.write(picturePath);
 
-            if (Files.notExists(Paths.get(picturePath))){
-                throw new ResponseStatusException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to save the picture");
+                if (Files.notExists(Paths.get(picturePath))) {
+                    throw new ResponseStatusException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to save the picture");
+                }
             }
 
             connection.commit();
@@ -122,9 +129,9 @@ public class UserServlet extends HttpServlet2 {
             jsonb.toJson(userDTO, response.getWriter());
         } catch (SQLException e) {
             throw new ResponseStatusException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to register the user", e);
-        }finally{
+        } finally {
             try {
-                if (!connection.getAutoCommit()){
+                if (!connection.getAutoCommit()) {
                     connection.rollback();
                     connection.setAutoCommit(true);
                 }
@@ -132,6 +139,7 @@ public class UserServlet extends HttpServlet2 {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+
         }
     }
 
@@ -139,44 +147,50 @@ public class UserServlet extends HttpServlet2 {
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
         UserDTO user = getUser(req);
-       try(Connection connection = pool.getConnection()){
-           PreparedStatement stm = connection.prepareStatement("DELETE FROM user WHERE id=?");
-           stm.setString(1, user.getId());
-           if(stm.executeUpdate()!=1){
-               throw new SQLException("Failed to delete the user");
-           }
-           resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+        try (Connection connection = pool.getConnection()) {
+            PreparedStatement stm = connection.prepareStatement("DELETE FROM user WHERE id=?");
+            stm.setString(1, user.getId());
+            if (stm.executeUpdate() != 1) {
+                throw new SQLException("Failed to delete the user");
+            }
+            resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
 
-           new Thread(()->{
-               Path imagePath = Paths.get(getServletContext().getRealPath("/"), "uploads", user.getId());
+            new Thread(() -> {
+                Path imagePath = Paths.get(getServletContext().getRealPath("/"), "uploads", user.getId());
 
 
-           }).start();
-       } catch (SQLException e) {
-           throw new ResponseStatusException(500,e.getMessage(),e);
-       }
+            }).start();
+        } catch (SQLException e) {
+            throw new ResponseStatusException(500, e.getMessage(), e);
+        }
 
     }
 
+    @Override
+    protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        UserDTO user = getUser(req);
 
-    private UserDTO getUser(HttpServletRequest req){
+
+    }
+
+    private UserDTO getUser(HttpServletRequest req) {
         if (!(req.getPathInfo() != null &&
                 (req.getPathInfo().length() == 37 ||
-                        req.getPathInfo().length() == 38 && req.getPathInfo().endsWith("/")))){
+                        req.getPathInfo().length() == 38 && req.getPathInfo().endsWith("/")))) {
             throw new ResponseStatusException(404, "Not found");
         }
-        String userId=req.getPathInfo().replace("/","");
-        try(Connection connection = pool.getConnection()){
+        String userId = req.getPathInfo().replace("/", "");
+        try (Connection connection = pool.getConnection()) {
             PreparedStatement stm = connection.prepareStatement("SELECT * FROM user WHERE id=?");
-            stm.setString(1,userId);
+            stm.setString(1, userId);
             ResultSet rst = stm.executeQuery();
-            if(!rst.next()){
-                throw new ResponseStatusException(404,"Invalid User Id");
-            }else{
-                String name=rst.getString("full_name");
-                String email=rst.getString("email");
-                String password=rst.getString("password");
-                String picture=rst.getString("profile_pic");
+            if (!rst.next()) {
+                throw new ResponseStatusException(404, "Invalid User Id");
+            } else {
+                String name = rst.getString("full_name");
+                String email = rst.getString("email");
+                String password = rst.getString("password");
+                String picture = rst.getString("profile_pic");
                 return new UserDTO(userId, name, email, password, picture);
 
             }
