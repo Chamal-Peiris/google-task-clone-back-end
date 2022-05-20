@@ -43,7 +43,32 @@ public class TaskServlet extends HttpServlet2 {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-
+        TaskDTO task = getTask(req);
+        Connection connection = null;
+        try {
+            connection = pool.get().getConnection();
+            connection.setAutoCommit(false);
+            pushUp(connection, task.getPosition());
+            PreparedStatement stm = connection.prepareStatement("DELETE FROM task WHERE id=?");
+            stm.setInt(1, task.getId());
+            if (stm.executeUpdate() != 1) {
+                throw new SQLException("Failed to delete the task");
+            }
+            connection.commit();
+            resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+        } catch (SQLException e) {
+            throw new ResponseStatusException(500, e.getMessage(), e);
+        } finally {
+            try {
+                if (connection != null) {
+                    connection.rollback();
+                    connection.setAutoCommit(true);
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                logger.log(Level.SEVERE, e.getMessage(), e);
+            }
+        }
     }
 
     @Override
@@ -128,6 +153,12 @@ public class TaskServlet extends HttpServlet2 {
     private void pushDown(Connection connection, int pos) throws SQLException {
         PreparedStatement pstm = connection.
                 prepareStatement("UPDATE task t SET position = position + 1 WHERE t.position >= ? ORDER BY t.position");
+        pstm.setInt(1, pos);
+        pstm.executeUpdate();
+    }
+    private void pushUp(Connection connection, int pos) throws SQLException {
+        PreparedStatement pstm = connection.
+                prepareStatement("UPDATE task t SET position = position - 1 WHERE t.position >= ? ORDER BY t.position");
         pstm.setInt(1, pos);
         pstm.executeUpdate();
     }
