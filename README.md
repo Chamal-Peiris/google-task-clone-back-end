@@ -1,7 +1,7 @@
 # Google Task Clone `Servlet-Back-End`
 
 ## Version
-0.1.0
+0.2.0
 ### REST API DOcumentation
 [User Service API Reference](https://web.postman.co/documentation/20424875-ffed4c9c-253a-4bcd-a2cf-9973e0b5bb16/publish?workspaceId=0444483a-d2de-4b5f-905c-01480a384096#styling)
 
