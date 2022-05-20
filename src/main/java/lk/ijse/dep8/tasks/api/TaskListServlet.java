@@ -82,14 +82,13 @@ public class TaskListServlet extends HttpServlet2 {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-
         if (req.getContentType() == null || !req.getContentType().startsWith("application/json")) {
             throw new ResponseStatusException(415, "Invalid content type or content type is empty");
         }
 
         String pattern = "/([A-Fa-f0-9\\-]{36})/lists/?";
         if (!req.getPathInfo().matches(pattern)) {
-            throw new ResponseStatusException(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Invalid end point for post request");
+            throw new ResponseStatusException(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Invalid end point for POST request");
         }
         Matcher matcher = Pattern.compile(pattern).matcher(req.getPathInfo());
         matcher.find();
@@ -129,7 +128,6 @@ public class TaskListServlet extends HttpServlet2 {
         } catch (SQLException e) {
             throw new ResponseStatusException(500, e.getMessage(), e);
         }
-
 
     }
 

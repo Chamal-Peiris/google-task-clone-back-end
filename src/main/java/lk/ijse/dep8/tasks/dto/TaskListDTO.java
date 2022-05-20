@@ -12,7 +12,7 @@ public class TaskListDTO implements Serializable {
     @JsonbTransient
     private String user_id;
 
-    public TaskListDTO(ArrayList<TaskListDTO> taskLists) {
+    public TaskListDTO() {
     }
 
     public TaskListDTO(Integer id, String title) {
