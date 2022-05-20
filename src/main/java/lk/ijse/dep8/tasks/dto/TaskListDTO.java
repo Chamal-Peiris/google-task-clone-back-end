@@ -6,12 +6,20 @@ public class TaskListDTO implements Serializable {
     private Integer id;
     private String title;
 
+    private String user_id;
+
     public TaskListDTO() {
     }
 
     public TaskListDTO(Integer id, String title) {
         this.id = id;
         this.title = title;
+    }
+
+    public TaskListDTO(Integer id, String title, String user_id) {
+        this.id = id;
+        this.title = title;
+        this.user_id = user_id;
     }
 
     public Integer getId() {
@@ -28,6 +36,14 @@ public class TaskListDTO implements Serializable {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getUser_id() {
+        return user_id;
+    }
+
+    public void setUser_id(String user_id) {
+        this.user_id = user_id;
     }
 
     @Override

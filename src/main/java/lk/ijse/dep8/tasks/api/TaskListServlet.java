@@ -32,7 +32,7 @@ private final Logger logger= Logger.getLogger(TaskListServlet.class.getName());
     public void init() {
         try {
             InitialContext ctx = new InitialContext();
-            DataSource ds = (DataSource) ctx.lookup("java/comp/env/jdbc/pool");
+            DataSource ds = (DataSource) ctx.lookup("java:comp/env/jdbc/pool");
             pool = new AtomicReference<>(ds);
         } catch (NamingException e) {
             logger.log(Level.SEVERE,"Failed to locate the JNDI pool",e);
@@ -98,4 +98,8 @@ private final Logger logger= Logger.getLogger(TaskListServlet.class.getName());
 
 
     }
+
+    private TaskListDTO getTaskListDTO()
+
 }
+
