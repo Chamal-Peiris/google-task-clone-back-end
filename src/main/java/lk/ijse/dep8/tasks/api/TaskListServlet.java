@@ -45,19 +45,19 @@ public class TaskListServlet extends HttpServlet2 {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String pattern = "/([A-Fa-f0-9\\-]{36})/lists/?";
+        String pattern = "^/([A-Fa-f0-9\\-]{36})/lists/?$";
         Matcher matcher = Pattern.compile(pattern).matcher(req.getPathInfo());
-        if (matcher.find()) {
+        if (matcher.find()){
             String userId = matcher.group(1);
 
             try (Connection connection = pool.get().getConnection()) {
                 PreparedStatement stm = connection.
                         prepareStatement("SELECT * FROM task_list t WHERE t.user_id=?");
-                stm.setString(1, userId);
+                stm.setString(1,userId);
                 ResultSet rst = stm.executeQuery();
 
                 ArrayList<TaskListDTO> taskLists = new ArrayList<>();
-                while (rst.next()) {
+                while (rst.next()){
                     int id = rst.getInt("id");
                     String title = rst.getString("name");
                     taskLists.add(new TaskListDTO(id, title, userId));
@@ -70,6 +70,12 @@ public class TaskListServlet extends HttpServlet2 {
             } catch (SQLException e) {
                 throw new ResponseStatusException(500, e.getMessage(), e);
             }
+        }else{
+            TaskListDTO taskList = getTaskListDTO(req);
+            Jsonb jsonb = JsonbBuilder.create();
+
+            resp.setContentType("application/json");
+            jsonb.toJson(taskList, resp.getWriter());
         }
 
     }
@@ -179,7 +185,7 @@ public class TaskListServlet extends HttpServlet2 {
     }
 
     private TaskListDTO getTaskListDTO(HttpServletRequest req) {
-        String pattern = "/([A-Fa-f0-9\\-]{36})/lists/(\\d+)/?";
+        String pattern = "^/([A-Fa-f0-9\\-]{36})/lists/(\\d+)/?$";
         if (!req.getPathInfo().matches(pattern)) {
             throw new ResponseStatusException(HttpServletResponse.SC_METHOD_NOT_ALLOWED, String.format("Invalid end point for %s request", req.getMethod()));
         }
