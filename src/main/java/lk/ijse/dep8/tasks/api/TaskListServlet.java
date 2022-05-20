@@ -62,6 +62,7 @@ private final Logger logger= Logger.getLogger(TaskListServlet.class.getName());
                     taskLists.add(new TaskListDTO(id, title, userId));
                 }
 
+                resp.setContentType("application/json");
                 Jsonb jsonb = JsonbBuilder.create();
                 jsonb.toJson(taskLists, resp.getWriter());
 
