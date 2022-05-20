@@ -28,7 +28,7 @@ public class DbInitializer implements ServletContextListener {
     public void contextInitialized(ServletContextEvent sce) {
 
         final String[] tables = {"sub_task", "task", "task_list", "user"};
-
+       // System.out.println("working");
 
         try (Connection connection = pool.getConnection()) {
             Statement stm = connection.createStatement();
