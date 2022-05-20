@@ -63,7 +63,7 @@ private final Logger logger= Logger.getLogger(TaskListServlet.class.getName());
         try(Connection connection = pool.get().getConnection()){
             PreparedStatement stm = connection.prepareStatement("SELECT * FROM user WHERE id=?");
             stm.setString(1,userId);
-            ResultSet rst = stm.executeQuery()
+            ResultSet rst = stm.executeQuery();
             if(!rst.next()){
                 throw new  ResponseStatusException(404,"Invalid user id");
             }else{
