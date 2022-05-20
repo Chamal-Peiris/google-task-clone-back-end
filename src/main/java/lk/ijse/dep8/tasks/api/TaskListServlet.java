@@ -116,6 +116,40 @@ private final Logger logger= Logger.getLogger(TaskListServlet.class.getName());
 
     }
 
+    @Override
+    protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        if (req.getContentType() == null || !req.getContentType().startsWith("application/json")) {
+            throw new ResponseStatusException(415, "Invalid content type or content type is empty");
+        }
+
+        TaskListDTO oldTaskList = getTaskListDTO(req);
+        Jsonb jsonb = JsonbBuilder.create();
+        TaskListDTO newTaskList;
+        try{
+            newTaskList = jsonb.fromJson(req.getReader(), TaskListDTO.class);
+        }catch (JsonbException e){
+            throw new ResponseStatusException(400, "Invalid JSON", e);
+        }
+
+        if (newTaskList.getTitle() == null || newTaskList.getTitle().trim().isEmpty()) {
+            throw new ResponseStatusException(400, "Invalid title or title is empty");
+        }
+
+        try (Connection connection = pool.get().getConnection()) {
+            PreparedStatement stm = connection.prepareStatement("UPDATE task_list SET name=? WHERE id=?");
+            stm.setString(1, newTaskList.getTitle());
+            stm.setInt(2, oldTaskList.getId());
+            if (stm.executeUpdate() != 1) {
+                throw new SQLException("Failed to update the task list");
+            }
+
+            resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+        } catch (SQLException e) {
+            throw new ResponseStatusException(500, e.getMessage(), e);
+        }
+
+    }
+
     private TaskListDTO getTaskListDTO(HttpServletRequest req){
         String pattern = "/([A-Fa-f0-9\\-]{36})/lists/(\\d+)/?";
         if (!req.getPathInfo().matches(pattern)) {
