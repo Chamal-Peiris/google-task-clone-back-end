@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 
 public class TaskListsDTO implements Serializable {
-    List<TaskListDTO> items;
+    private List<TaskListDTO> items;
 
     public TaskListsDTO() {
     }
@@ -19,5 +19,12 @@ public class TaskListsDTO implements Serializable {
 
     public void setItems(List<TaskListDTO> items) {
         this.items = items;
+    }
+
+    @Override
+    public String toString() {
+        return "TaskListsDTO{" +
+                "items=" + items +
+                '}';
     }
 }

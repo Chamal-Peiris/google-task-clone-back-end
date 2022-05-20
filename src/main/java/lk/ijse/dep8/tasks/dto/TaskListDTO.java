@@ -3,6 +3,7 @@ package lk.ijse.dep8.tasks.dto;
 import jakarta.json.bind.annotation.JsonbTransient;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class TaskListDTO implements Serializable {
     private Integer id;
@@ -11,7 +12,7 @@ public class TaskListDTO implements Serializable {
     @JsonbTransient
     private String user_id;
 
-    public TaskListDTO() {
+    public TaskListDTO(ArrayList<TaskListDTO> taskLists) {
     }
 
     public TaskListDTO(Integer id, String title) {

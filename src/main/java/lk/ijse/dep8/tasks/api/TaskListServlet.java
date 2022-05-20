@@ -5,6 +5,7 @@ import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 import jakarta.json.bind.JsonbException;
 import lk.ijse.dep8.tasks.dto.TaskListDTO;
+import lk.ijse.dep8.tasks.dto.TaskListsDTO;
 import lk.ijse.dep8.tasks.util.HttpServlet2;
 import lk.ijse.dep8.tasks.util.ResponseStatusException;
 
@@ -26,7 +27,7 @@ import java.util.regex.Pattern;
 
 @WebServlet(name = "TaskListServlet")
 public class TaskListServlet extends HttpServlet2 {
-private final Logger logger= Logger.getLogger(TaskListServlet.class.getName());
+    private final Logger logger = Logger.getLogger(TaskListServlet.class.getName());
 
     private AtomicReference<DataSource> pool;
 
@@ -36,7 +37,7 @@ private final Logger logger= Logger.getLogger(TaskListServlet.class.getName());
             DataSource ds = (DataSource) ctx.lookup("java:comp/env/jdbc/pool");
             pool = new AtomicReference<>(ds);
         } catch (NamingException e) {
-            logger.log(Level.SEVERE,"Failed to locate the JNDI pool",e);
+            logger.log(Level.SEVERE, "Failed to locate the JNDI pool", e);
         }
 
 
@@ -46,17 +47,17 @@ private final Logger logger= Logger.getLogger(TaskListServlet.class.getName());
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pattern = "/([A-Fa-f0-9\\-]{36})/lists/?";
         Matcher matcher = Pattern.compile(pattern).matcher(req.getPathInfo());
-        if (matcher.find()){
+        if (matcher.find()) {
             String userId = matcher.group(1);
 
             try (Connection connection = pool.get().getConnection()) {
                 PreparedStatement stm = connection.
                         prepareStatement("SELECT * FROM task_list t WHERE t.user_id=?");
-                stm.setString(1,userId);
+                stm.setString(1, userId);
                 ResultSet rst = stm.executeQuery();
 
                 ArrayList<TaskListDTO> taskLists = new ArrayList<>();
-                while (rst.next()){
+                while (rst.next()) {
                     int id = rst.getInt("id");
                     String title = rst.getString("name");
                     taskLists.add(new TaskListDTO(id, title, userId));
@@ -64,12 +65,13 @@ private final Logger logger= Logger.getLogger(TaskListServlet.class.getName());
 
                 resp.setContentType("application/json");
                 Jsonb jsonb = JsonbBuilder.create();
-                jsonb.toJson(taskLists, resp.getWriter());
+                jsonb.toJson(new TaskListsDTO(taskLists), resp.getWriter());
 
             } catch (SQLException e) {
                 throw new ResponseStatusException(500, e.getMessage(), e);
             }
         }
+
     }
 
     @Override
@@ -128,17 +130,17 @@ private final Logger logger= Logger.getLogger(TaskListServlet.class.getName());
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         TaskListDTO taskListDTO = getTaskListDTO(req);
-       try( Connection connection = pool.get().getConnection()){
-           PreparedStatement stm = connection.prepareStatement("DELETE FROM task_list WHERE id=?");
-           stm.setInt(1,taskListDTO.getId());
-           if(stm.executeUpdate()!=1){
-               throw new SQLException("Failed to delete the task list");
-           }
-           resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+        try (Connection connection = pool.get().getConnection()) {
+            PreparedStatement stm = connection.prepareStatement("DELETE FROM task_list WHERE id=?");
+            stm.setInt(1, taskListDTO.getId());
+            if (stm.executeUpdate() != 1) {
+                throw new SQLException("Failed to delete the task list");
+            }
+            resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
 
-       } catch (SQLException e) {
-           throw new ResponseStatusException(500, "Failed to delete the task");
-       }
+        } catch (SQLException e) {
+            throw new ResponseStatusException(500, "Failed to delete the task");
+        }
 
     }
 
@@ -151,9 +153,9 @@ private final Logger logger= Logger.getLogger(TaskListServlet.class.getName());
         TaskListDTO oldTaskList = getTaskListDTO(req);
         Jsonb jsonb = JsonbBuilder.create();
         TaskListDTO newTaskList;
-        try{
+        try {
             newTaskList = jsonb.fromJson(req.getReader(), TaskListDTO.class);
-        }catch (JsonbException e){
+        } catch (JsonbException e) {
             throw new ResponseStatusException(400, "Invalid JSON", e);
         }
 
@@ -176,33 +178,32 @@ private final Logger logger= Logger.getLogger(TaskListServlet.class.getName());
 
     }
 
-    private TaskListDTO getTaskListDTO(HttpServletRequest req){
+    private TaskListDTO getTaskListDTO(HttpServletRequest req) {
         String pattern = "/([A-Fa-f0-9\\-]{36})/lists/(\\d+)/?";
         if (!req.getPathInfo().matches(pattern)) {
-            throw new ResponseStatusException(HttpServletResponse.SC_METHOD_NOT_ALLOWED, String.format("Invalid end point for %s request",req.getMethod()));
+            throw new ResponseStatusException(HttpServletResponse.SC_METHOD_NOT_ALLOWED, String.format("Invalid end point for %s request", req.getMethod()));
         }
         Matcher matcher = Pattern.compile(pattern).matcher(req.getPathInfo());
         matcher.find();
         String userId = matcher.group(1);
-        int taskListId=Integer.parseInt(matcher.group(2));
-       try( Connection connection = pool.get().getConnection()){
-           PreparedStatement stm = connection.prepareStatement("SELECT * FROM task_list t WHERE t.id=? AND t.user_id=? ");
-           stm.setInt(1,taskListId);
-           stm.setString(2,userId);
-           ResultSet rst = stm.executeQuery();
-           if(rst.next()){
-              int id= rst.getInt("id");
-              String title= rst.getString("name");
-              return  new TaskListDTO(id,title,userId);
-           }else{
-               throw  new ResponseStatusException(404,"Invalid UserId or Task List ID");
-           }
+        int taskListId = Integer.parseInt(matcher.group(2));
+        try (Connection connection = pool.get().getConnection()) {
+            PreparedStatement stm = connection.prepareStatement("SELECT * FROM task_list t WHERE t.id=? AND t.user_id=? ");
+            stm.setInt(1, taskListId);
+            stm.setString(2, userId);
+            ResultSet rst = stm.executeQuery();
+            if (rst.next()) {
+                int id = rst.getInt("id");
+                String title = rst.getString("name");
+                return new TaskListDTO(id, title, userId);
+            } else {
+                throw new ResponseStatusException(404, "Invalid UserId or Task List ID");
+            }
 
 
-
-       } catch (SQLException e) {
-           throw new ResponseStatusException(500, "Failed to fetch task list details");
-       }
+        } catch (SQLException e) {
+            throw new ResponseStatusException(500, "Failed to fetch task list details");
+        }
     }
 
 }
