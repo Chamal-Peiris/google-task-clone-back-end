@@ -7,7 +7,7 @@ public class TaskDTO implements Serializable {
     private String title;
     private Integer position;
     private String notes;
-    private String status;
+    private Status status;
 
     public TaskDTO() {
     }
@@ -17,8 +17,17 @@ public class TaskDTO implements Serializable {
         this.title = title;
         this.position = position;
         this.notes = notes;
+        this.setStatus(status);
+    }
+
+    public TaskDTO(Integer id, String title, Integer position, String notes, Status status) {
+        this.id = id;
+        this.title = title;
+        this.position = position;
+        this.notes = notes;
         this.status = status;
     }
+
 
     public Integer getId() {
         return id;
@@ -52,18 +61,32 @@ public class TaskDTO implements Serializable {
         this.notes = notes;
     }
 
-    public String getStatus() {
+    public Status getStatus() {
         return status;
     }
 
     public void setStatus(String status) {
+        this.status = status.equals("completed")? Status.COMPLETED: Status.NEEDS_ACTION;
+    }
+
+    public void setStatusAsEnum(Status status) {
         this.status = status;
     }
 
-    public enum Status{
-        NEEDS_ACTION("needsAction"),COMPLETED("completed");
+    @Override
+    public String toString() {
+        return "TaskDTO{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", position=" + position +
+                ", notes='" + notes + '\'' +
+                ", status=" + status +
+                '}';
+    }
 
-        private String state;
+    public enum Status{
+        NEEDS_ACTION("needsAction"), COMPLETED("completed");
+        private final String state;
 
         Status(String state) {
             this.state = state;
@@ -71,9 +94,7 @@ public class TaskDTO implements Serializable {
 
         @Override
         public String toString() {
-            return super.toString();
+            return state;
         }
     }
-
-
 }

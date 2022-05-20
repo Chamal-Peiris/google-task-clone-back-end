@@ -3,6 +3,7 @@ package lk.ijse.dep8.tasks.api;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 import jakarta.json.bind.JsonbException;
+import lk.ijse.dep8.tasks.dto.TaskDTO;
 import lk.ijse.dep8.tasks.dto.TaskListDTO;
 import lk.ijse.dep8.tasks.util.HttpServlet2;
 import lk.ijse.dep8.tasks.util.ResponseStatusException;
@@ -56,37 +57,79 @@ public class TaskServlet extends HttpServlet2 {
             throw new ResponseStatusException(415, "Invalid content type or content type is empty");
         }
 
-        String pattern = "/([A-Fa-f0-9\\-]{36})/lists/\\d+/tasks/?";
+        String pattern = "/([A-Fa-f0-9\\-]{36})/lists/(\\d+)/tasks/?";
         if (!req.getPathInfo().matches(pattern)) {
             throw new ResponseStatusException(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Invalid end point for POST request");
         }
         Matcher matcher = Pattern.compile(pattern).matcher(req.getPathInfo());
         matcher.find();
         String userId = matcher.group(1);
+        int taskListId = Integer.parseInt(matcher.group(2));
 
-        try (Connection connection = pool.get().getConnection()) {
-            Jsonb jsonb = JsonbBuilder.create();
-            TaskListDTO taskList = jsonb.fromJson(req.getReader(), TaskListDTO.class);
+        Connection connection = null;
+        try  {
+            connection = pool.get().getConnection();
 
-            PreparedStatement stm = connection.prepareStatement("INSERT INTO task_list (name,user_id) VALUES (?,?)", Statement.RETURN_GENERATED_KEYS);
-            stm.setString(1, taskList.getTitle());
+            PreparedStatement stm = connection.
+                    prepareStatement("SELECT * FROM task_list t WHERE t.id=? AND t.user_id=?");
+            stm.setInt(1, taskListId);
             stm.setString(2, userId);
+            if (!stm.executeQuery().next()){
+                throw new ResponseStatusException(404, "Invalid user id or task list id");
+            }
+
+            Jsonb jsonb = JsonbBuilder.create();
+            TaskDTO task = jsonb.fromJson(req.getReader(), TaskDTO.class);
+
+            if (task.getTitle() == null || task.getTitle().trim().isEmpty()) {
+                throw new ResponseStatusException(400, "Invalid title or title is empty");
+            }
+            task.setPosition(0);
+            task.setStatusAsEnum(TaskDTO.Status.NEEDS_ACTION);
+
+            connection.setAutoCommit(false);
+            pushDown(connection, 0);
+
+            stm = connection.
+                    prepareStatement("INSERT INTO task (title, details, position, status, task_list_id) VALUES (?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+            stm.setString(1, task.getTitle());
+            stm.setString(2, task.getNotes());
+            stm.setInt(3, task.getPosition());
+            stm.setString(4, task.getStatus().toString());
+            stm.setInt(5, taskListId);
             if (stm.executeUpdate() != 1) {
                 throw new SQLException("Failed to save the task list");
             }
 
             ResultSet rst = stm.getGeneratedKeys();
             rst.next();
-            taskList.setId(rst.getInt(1));
+            task.setId(rst.getInt(1));
+            connection.commit();
 
             resp.setContentType("application/json");
             resp.setStatus(HttpServletResponse.SC_CREATED);
-            jsonb.toJson(taskList, resp.getWriter());
+            jsonb.toJson(task, resp.getWriter());
         } catch (JsonbException e) {
             throw new ResponseStatusException(400, "Invalid JSON", e);
         } catch (SQLException e) {
             throw new ResponseStatusException(500, e.getMessage(), e);
+        } finally{
+            try {
+                if (connection == null && !connection.getAutoCommit()){
+                    connection.rollback();
+                    connection.setAutoCommit(true);
+                }
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
-
     }
+    private void pushDown(Connection connection, int pos) throws SQLException {
+        PreparedStatement pstm = connection.
+                prepareStatement("UPDATE task t SET position = position + 1 WHERE t.position >= ? ORDER BY t.position");
+        pstm.setInt(1, pos);
+        pstm.executeUpdate();
+    }
+
 }
