@@ -42,8 +42,8 @@ public class TaskServlet extends HttpServlet2 {
     }
 
     @Override
-    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        System.out.println("Request came here");
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
     }
 
     @Override
@@ -132,4 +132,38 @@ public class TaskServlet extends HttpServlet2 {
         pstm.executeUpdate();
     }
 
+    private TaskDTO getTask(HttpServletRequest req) {
+
+        String pattern = "^/([A-Fa-f0-9\\-]{36})/lists/(\\d+)/tasks/(\\d+)/?$";
+        if (!req.getPathInfo().matches(pattern)) {
+            throw new ResponseStatusException(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+                    String.format("Invalid end point for %s request", req.getMethod()));
+        }
+        Matcher matcher = Pattern.compile(pattern).matcher(req.getPathInfo());
+        matcher.find();
+        String userId = matcher.group(1);
+        int taskListId = Integer.parseInt(matcher.group(2));
+        int taskId = Integer.parseInt(matcher.group(3));
+
+        try (Connection connection = pool.get().getConnection()) {
+            PreparedStatement stm = connection.
+                    prepareStatement("SELECT * FROM task_list tl INNER JOIN task t WHERE t.id=? AND tl.id=? AND tl.user_id=?");
+            stm.setInt(1, taskId);
+            stm.setInt(2, taskListId);
+            stm.setString(3, userId);
+            ResultSet rst = stm.executeQuery();
+            if (rst.next()) {
+                int id = rst.getInt("id");
+                String title = rst.getString("title");
+                String details = rst.getString("details");
+                int position = rst.getInt("position");
+                String status = rst.getString("status");
+                return new TaskDTO(id, title, position, details, status, taskListId);
+            } else {
+                throw new ResponseStatusException(404, "Invalid user id or task list id");
+            }
+        } catch (SQLException e) {
+            throw new ResponseStatusException(500, "Failed to fetch task list details");
+        }
+    }
 }
