@@ -24,7 +24,7 @@ import java.sql.SQLException;
 import java.util.UUID;
 
 @MultipartConfig(location = "/tmp", maxFileSize = 10 * 2024 * 1024)
-@WebServlet(name = "UserServlet", value = {"/v1/users/*"})
+@WebServlet(name = "UserServlet",urlPatterns = "/users")
 public class UserServlet extends HttpServlet2 {
 
 
