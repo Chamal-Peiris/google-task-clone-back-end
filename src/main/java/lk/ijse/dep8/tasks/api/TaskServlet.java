@@ -290,23 +290,22 @@ public class TaskServlet extends HttpServlet2 {
 
         try (Connection connection = pool.get().getConnection()) {
             PreparedStatement stm = connection.
-                    prepareStatement("SELECT * FROM task_list tl INNER JOIN task t WHERE t.id=? AND tl.id=? AND tl.user_id=?");
+                    prepareStatement("SELECT * FROM task_list tl INNER JOIN task t ON t.task_list_id = tl.id WHERE t.id=? AND tl.id=? AND tl.user_id=?");
             stm.setInt(1, taskId);
             stm.setInt(2, taskListId);
             stm.setString(3, userId);
             ResultSet rst = stm.executeQuery();
             if (rst.next()) {
-
                 String title = rst.getString("title");
                 String details = rst.getString("details");
                 int position = rst.getInt("position");
                 String status = rst.getString("status");
                 return new TaskDTO(taskId, title, position, details, status, taskListId);
             } else {
-                throw new ResponseStatusException(404, "Invalid user id or task list id");
+                throw new ResponseStatusException(404, "Invalid user id or task list id or task id");
             }
         } catch (SQLException e) {
-            throw new ResponseStatusException(500, "Failed to fetch task list details");
+            throw new ResponseStatusException(500, "Failed to fetch task details");
         }
     }
 }
