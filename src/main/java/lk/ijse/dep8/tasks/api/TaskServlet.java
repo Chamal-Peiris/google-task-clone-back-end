@@ -79,6 +79,11 @@ public class TaskServlet extends HttpServlet2 {
     }
 
     @Override
+    protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
+    }
+
+    @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pattern = "^/([A-Fa-f0-9\\-]{36})/lists/(\\d+)/tasks/?$";
         Matcher matcher = Pattern.compile(pattern).matcher(req.getPathInfo());
