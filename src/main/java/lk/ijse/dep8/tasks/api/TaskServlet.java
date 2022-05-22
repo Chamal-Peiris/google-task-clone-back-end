@@ -204,14 +204,14 @@ public class TaskServlet extends HttpServlet2 {
         int taskListId = Integer.parseInt(matcher.group(2));
 
         Connection connection = null;
-        try  {
+        try {
             connection = pool.get().getConnection();
 
             PreparedStatement stm = connection.
                     prepareStatement("SELECT * FROM task_list t WHERE t.id=? AND t.user_id=?");
             stm.setInt(1, taskListId);
             stm.setString(2, userId);
-            if (!stm.executeQuery().next()){
+            if (!stm.executeQuery().next()) {
                 throw new ResponseStatusException(404, "Invalid user id or task list id");
             }
 
@@ -225,14 +225,14 @@ public class TaskServlet extends HttpServlet2 {
             task.setStatusAsEnum(TaskDTO.Status.NEEDS_ACTION);
 
             connection.setAutoCommit(false);
-            pushDown(connection, 0);
+            pushDown(connection, 0, taskListId);
 
             stm = connection.
                     prepareStatement("INSERT INTO task (title, details, position, status, task_list_id) VALUES (?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
             stm.setString(1, task.getTitle());
             stm.setString(2, task.getNotes());
             stm.setInt(3, task.getPosition());
-            stm.setString(4, task.getStatus().toString());
+            stm.setString(4, task.getStatus());
             stm.setInt(5, taskListId);
             if (stm.executeUpdate() != 1) {
                 throw new SQLException("Failed to save the task list");
@@ -250,15 +250,17 @@ public class TaskServlet extends HttpServlet2 {
             throw new ResponseStatusException(400, "Invalid JSON", e);
         } catch (SQLException e) {
             throw new ResponseStatusException(500, e.getMessage(), e);
-        } finally{
+        } finally {
             try {
-                if (connection == null && !connection.getAutoCommit()){
-                    connection.rollback();
-                    connection.setAutoCommit(true);
+                if (connection != null) {
+                    if (!connection.getAutoCommit()) {
+                        connection.rollback();
+                        connection.setAutoCommit(true);
+                    }
+                    connection.close();
                 }
-                connection.close();
             } catch (SQLException e) {
-                e.printStackTrace();
+                logger.log(Level.SEVERE, e.getMessage(), e);
             }
         }
     }
