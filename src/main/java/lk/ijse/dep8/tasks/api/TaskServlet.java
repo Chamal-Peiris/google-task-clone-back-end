@@ -99,8 +99,8 @@ public class TaskServlet extends HttpServlet2 {
             connection = pool.get().getConnection();
             connection.setAutoCommit(false);
             if (!oldTask.getPosition().equals(newTask.getPosition())) {
-                pushUp(connection, oldTask.getPosition());
-                pushDown(connection, newTask.getPosition());
+                pushUp(connection, oldTask.getPosition(), oldTask.getTaskListId());
+                pushDown(connection, newTask.getPosition(), oldTask.getTaskListId());
             }
 
             PreparedStatement stm = connection.
@@ -262,19 +262,21 @@ public class TaskServlet extends HttpServlet2 {
             }
         }
     }
-    private void pushDown(Connection connection, int pos) throws SQLException {
+    private void pushDown(Connection connection, int pos, int taskListId) throws SQLException {
         PreparedStatement pstm = connection.
-                prepareStatement("UPDATE task t SET position = position + 1 WHERE t.position >= ? ORDER BY t.position");
+                prepareStatement("UPDATE task t SET position = position + 1 WHERE t.position >= ? AND t.task_list_id = ? ORDER BY t.position");
         pstm.setInt(1, pos);
-        pstm.executeUpdate();
-    }
-    private void pushUp(Connection connection, int pos) throws SQLException {
-        PreparedStatement pstm = connection.
-                prepareStatement("UPDATE task t SET position = position - 1 WHERE t.position >= ? ORDER BY t.position");
-        pstm.setInt(1, pos);
+        pstm.setInt(2, taskListId);
         pstm.executeUpdate();
     }
 
+    private void pushUp(Connection connection, int pos, int taskListId) throws SQLException {
+        PreparedStatement pstm = connection.
+                prepareStatement("UPDATE task t SET position = position - 1 WHERE t.position >= ? AND t.task_list_id = ? ORDER BY t.position");
+        pstm.setInt(1, pos);
+        pstm.setInt(2, taskListId);
+        pstm.executeUpdate();
+    }
     private TaskDTO getTask(HttpServletRequest req) {
 
         String pattern = "^/([A-Fa-f0-9\\-]{36})/lists/(\\d+)/tasks/(\\d+)/?$";
