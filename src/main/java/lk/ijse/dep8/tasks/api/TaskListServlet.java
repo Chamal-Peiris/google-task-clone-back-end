@@ -1,16 +1,12 @@
 package lk.ijse.dep8.tasks.api;
 
-import com.mysql.cj.log.Log;
 import jakarta.json.Json;
-import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 import jakarta.json.bind.JsonbException;
 import jakarta.json.stream.JsonParser;
-import lk.ijse.dep8.tasks.dto.TaskDTO;
 import lk.ijse.dep8.tasks.dto.TaskListDTO;
-import lk.ijse.dep8.tasks.dto.TaskListsDTO;
 import lk.ijse.dep8.tasks.util.HttpServlet2;
 import lk.ijse.dep8.tasks.util.ResponseStatusException;
 
@@ -20,12 +16,10 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 import javax.servlet.annotation.*;
 import javax.sql.DataSource;
-import javax.xml.crypto.Data;
 import java.io.IOException;
 import java.io.StringReader;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
