@@ -55,7 +55,7 @@ public class TaskServlet extends HttpServlet2 {
         try {
             connection = pool.get().getConnection();
             connection.setAutoCommit(false);
-            pushUp(connection, task.getPosition());
+            pushUp(connection, task.getPosition(), task.getTaskListId());
             PreparedStatement stm = connection.prepareStatement("DELETE FROM task WHERE id=?");
             stm.setInt(1, task.getId());
             if (stm.executeUpdate() != 1) {
