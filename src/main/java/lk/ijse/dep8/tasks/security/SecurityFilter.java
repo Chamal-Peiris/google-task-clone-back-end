@@ -1,6 +1,9 @@
 package lk.ijse.dep8.tasks.security;
 
+import jakarta.json.bind.Jsonb;
+import jakarta.json.bind.JsonbBuilder;
 import lk.ijse.dep8.tasks.dto.UserDTO;
+import lk.ijse.dep8.tasks.util.HttpResponseErrorMessage;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import javax.annotation.Resource;
@@ -19,6 +22,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Base64;
+import java.util.Date;
 
 @WebFilter(filterName = "SecurityFilter", urlPatterns = "/*")
 public class SecurityFilter extends HttpFilter {
@@ -38,7 +42,7 @@ public class SecurityFilter extends HttpFilter {
         String authorization = req.getHeader("Authorization");
 
         if (authorization == null || !authorization.startsWith("Basic")) {
-            res.setStatus(401);
+            sendErrorResponse(req,res);
         }
         String base64Credentials = authorization.replaceAll("Basic ", "");
         Base64.Decoder decoder = Base64.getDecoder();
@@ -54,12 +58,12 @@ public class SecurityFilter extends HttpFilter {
             stm.setString(1, username);
             ResultSet rst = stm.executeQuery();
             if (!rst.next()) {
-                res.setStatus(401);
+                sendErrorResponse(req,res);
                 return;
             }
 
             if (!DigestUtils.sha256Hex(password).equals(rst.getString("password"))) {
-                res.setStatus(401);
+                sendErrorResponse(req,res);
                 return;
             }
 
@@ -73,6 +77,13 @@ public class SecurityFilter extends HttpFilter {
         }
 
 
+    }
+
+    private void sendErrorResponse(HttpServletRequest req,HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json");
+        resp.setStatus(401);
+        Jsonb jsonb = JsonbBuilder.create();
+        jsonb.toJson( new HttpResponseErrorMessage(new Date().getTime(),401,null,"Invalid Location",req.getRequestURI()),resp.getWriter());
     }
 
 
