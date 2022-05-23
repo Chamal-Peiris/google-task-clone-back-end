@@ -1,12 +1,16 @@
 package lk.ijse.dep8.tasks.api;
 
+import jakarta.json.bind.Jsonb;
+import jakarta.json.bind.JsonbBuilder;
 import lk.ijse.dep8.tasks.security.SecurityContextHolder;
+import lk.ijse.dep8.tasks.util.HttpResponseErrorMessage;
 import lk.ijse.dep8.tasks.util.HttpServlet2;
 
 import javax.servlet.*;
 import javax.servlet.http.*;
 import javax.servlet.annotation.*;
 import java.io.IOException;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,7 +28,10 @@ public class DispatcherServlet extends HttpServlet2 {
             if(matcher.find()){
                 String urlUserId=matcher.group(1);
                 if(!urlUserId.equals(SecurityContextHolder.getPrincipal().getId())){
+                    resp.setContentType("application/json");
                     resp.setStatus(403);
+                    Jsonb jsonb = JsonbBuilder.create();
+                    jsonb.toJson( new HttpResponseErrorMessage(new Date().getTime(),403,null,"Invalid Location",req.getRequestURI()),resp.getWriter());
                     return;
                 }
             }
@@ -38,7 +45,13 @@ public class DispatcherServlet extends HttpServlet2 {
             }else if(req.getPathInfo().matches("/[A-Fa-f0-9\\-]{36}/lists/\\d+/tasks(/\\d+)?/?")){
                 getServletContext().getNamedDispatcher("TaskServlet").forward(req, resp);
             }else{
-                super.service(req,resp);
+              resp.setContentType("application/json");
+              resp.setStatus(404);
+                Jsonb jsonb = JsonbBuilder.create();
+                jsonb.toJson( new HttpResponseErrorMessage(new Date().getTime(),404,null,"Invalid Location",req.getRequestURI()),resp.getWriter());
+
+
+
             }
         }
     }
