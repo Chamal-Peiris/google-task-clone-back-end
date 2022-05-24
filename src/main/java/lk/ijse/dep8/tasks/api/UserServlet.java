@@ -46,7 +46,6 @@ public class UserServlet extends HttpServlet2 {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
         if (request.getContentType() == null || !request.getContentType().startsWith("multipart/form-data")) {
             throw new ResponseStatusException(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE, "Invalid content type or no content type is provided");
         }
@@ -66,80 +65,27 @@ public class UserServlet extends HttpServlet2 {
             throw new ResponseStatusException(HttpServletResponse.SC_BAD_REQUEST, "Invalid email or email is empty");
         } else if (password == null || password.trim().isEmpty()) {
             throw new ResponseStatusException(HttpServletResponse.SC_BAD_REQUEST, "Password can't be empty");
-        } else if (picture != null && ((picture.getSize()==0) || !picture.getContentType().startsWith("image"))) {
+        } else if (picture != null && (picture.getSize() == 0 || !picture.getContentType().startsWith("image"))) {
             throw new ResponseStatusException(HttpServletResponse.SC_BAD_REQUEST, "Invalid picture");
         }
 
-
-        Connection connection = null;
-        try {
-            connection = pool.getConnection();
-
-
-            if (UserService.existUser(connection,email)) {
+        try (Connection connection = pool.getConnection()) {
+            if (UserService.existUser(connection, email)) {
                 throw new ResponseStatusException(HttpServletResponse.SC_CONFLICT, "A user has been already registered with this email");
             }
 
-            connection.setAutoCommit(false);
-
-            stm = connection.
-                    prepareStatement("INSERT INTO user (id, email, password, full_name, profile_pic) VALUES (?, ?, ?, ?, ?)");
-            String id = UUID.randomUUID().toString();
-            stm.setString(1, id);
-            stm.setString(2, email);
-            stm.setString(3, DigestUtils.sha256Hex(password));
-            stm.setString(4, name);
-
-            String pictureUrl = null;
-            if (picture != null) {
-                pictureUrl = request.getScheme() + "://" + request.getServerName() + ":"
-                        + request.getServerPort() + request.getContextPath();
-                pictureUrl += "/uploads/" + id;
-
-                stm.setString(5, pictureUrl);
-            } else {
-                stm.setString(5, null);
-            }
-
-            if (stm.executeUpdate() != 1) {
-                throw new SQLException("Failed to register the user");
-            }
-
-            if (picture != null) {
-                String appLocation = getServletContext().getRealPath("/");
-                Path path = Paths.get(appLocation, "uploads");
-                if (Files.notExists(path)) {
-                    Files.createDirectory(path);
-                }
-
-                String picturePath = path.resolve(id).toAbsolutePath().toString();
-                picture.write(picturePath);
-
-                if (Files.notExists(Paths.get(picturePath))) {
-                    throw new ResponseStatusException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to save the picture");
-                }
-            }
-
-            connection.commit();
+            UserDTO user = new UserDTO(null, name, email, password, null);
+            String pictureUrl = request.getScheme() + "://" + request.getServerName() + ":"
+                    + request.getServerPort() + request.getContextPath();
+            user = UserService.registerUser(connection, picture, pictureUrl,
+                    getServletContext().getRealPath("/"), user);
 
             response.setStatus(HttpServletResponse.SC_CREATED);
             response.setContentType("application/json");
-            UserDTO userDTO = new UserDTO(id, name, email, password, pictureUrl);
             Jsonb jsonb = JsonbBuilder.create();
-            jsonb.toJson(userDTO, response.getWriter());
+            jsonb.toJson(user, response.getWriter());
         } catch (SQLException e) {
             throw new ResponseStatusException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to register the user", e);
-        } finally {
-            try {
-                if (!connection.getAutoCommit()) {
-                    connection.rollback();
-                    connection.setAutoCommit(true);
-                }
-                connection.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-
         }
     }
 
