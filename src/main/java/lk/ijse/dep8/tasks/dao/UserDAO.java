@@ -23,7 +23,7 @@ public class UserDAO {
         stm.setString(1, user.getId());
         stm.setString(2, user.getEmail());
         stm.setString(3, user.getPassword());
-        stm.setString(4, user.getPassword());
+        stm.setString(4, user.getName());
         stm.setString(5, user.getPicture());
 
         if(stm.executeUpdate()!=1){
