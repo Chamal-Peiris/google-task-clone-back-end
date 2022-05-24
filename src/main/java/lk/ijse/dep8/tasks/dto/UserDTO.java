@@ -65,6 +65,8 @@ public class UserDTO implements Serializable {
         this.picture = picture;
     }
 
+
+
     @Override
     public String toString() {
         return super.toString();
