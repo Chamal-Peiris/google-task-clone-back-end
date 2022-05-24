@@ -1,6 +1,6 @@
 package lk.ijse.dep8.tasks.service;
 
-import lk.ijse.dep8.tasks.dao.UserDAO;
+import lk.ijse.dep8.tasks.dao.UserDAOOld;
 import lk.ijse.dep8.tasks.dto.UserDTO;
 import org.apache.commons.codec.digest.DigestUtils;
 
@@ -18,7 +18,7 @@ public class UserService {
     private  final Logger logger = Logger.getLogger(UserService.class.getName());
 
     public  boolean existsUser(Connection connection, String userIdOrEmail) throws SQLException {
-        return new UserDAO().existsUser(connection, userIdOrEmail);
+        return new UserDAOOld().existsUser(connection, userIdOrEmail);
     }
 
     public  UserDTO registerUser(Connection connection, Part picture,
@@ -32,7 +32,7 @@ public class UserService {
                 user.setPicture(user.getPicture() + user.getId());
             }
             user.setPassword(DigestUtils.sha256Hex(user.getPassword()));
-            UserDTO savedUser = new UserDAO().saveUser(connection, user);
+            UserDTO savedUser = new UserDAOOld().saveUser(connection, user);
 
             if (picture != null) {
                 Path path = Paths.get(appLocation, "uploads");
@@ -55,11 +55,11 @@ public class UserService {
     }
 
     public  UserDTO getUser(Connection connection, String userIdOrEmail) throws SQLException {
-        return new UserDAO().getUser(connection, userIdOrEmail);
+        return new UserDAOOld().getUser(connection, userIdOrEmail);
     }
 
     public  void deleteUser(Connection connection, String userId, String appLocation) throws SQLException {
-        new UserDAO().deleteUser(connection, userId);
+        new UserDAOOld().deleteUser(connection, userId);
 
         new Thread(() -> {
             Path imagePath = Paths.get(appLocation, "uploads",
@@ -78,7 +78,7 @@ public class UserService {
             connection.setAutoCommit(false);
 
             user.setPassword(DigestUtils.sha256Hex(user.getPassword()));
-            new UserDAO().updateUser(connection, user);
+            new UserDAOOld().updateUser(connection, user);
 
             Path path = Paths.get(appLocation, "uploads");
             Path picturePath = path.resolve(user.getId());
