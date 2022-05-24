@@ -85,8 +85,8 @@ public class UserServlet extends HttpServlet2 {
             response.setContentType("application/json");
             Jsonb jsonb = JsonbBuilder.create();
             jsonb.toJson(user, response.getWriter());
-        } catch (SQLException e) {
-            throw new ResponseStatusException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to register the user", e);
+        } catch (Throwable t) {
+            throw new ResponseStatusException(500,"Failed to fetch the user info",t);
         }
     }
 
@@ -105,6 +105,9 @@ public class UserServlet extends HttpServlet2 {
             new Thread(() -> {
                 Path imagePath = Paths.get(getServletContext().getRealPath("/"), "uploads", user.getId());
 
+                try{
+
+                }
 
             }).start();
         } catch (SQLException e) {
@@ -200,23 +203,17 @@ public class UserServlet extends HttpServlet2 {
         }
         String userId = req.getPathInfo().replace("/", "");
         try (Connection connection = pool.getConnection()) {
-            PreparedStatement stm = connection.prepareStatement("SELECT * FROM user WHERE id=?");
-            stm.setString(1, userId);
-            ResultSet rst = stm.executeQuery();
-            if (!rst.next()) {
+
+            if (!UserService.existUser(connection,userId)) {
                 throw new ResponseStatusException(404, "Invalid User Id");
             } else {
-                String name = rst.getString("full_name");
-                String email = rst.getString("email");
-                String password = rst.getString("password");
-                String picture = rst.getString("profile_pic");
-                return new UserDTO(userId, name, email, password, picture);
+               return UserService.getUser(connection,userId);
 
             }
 
 
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        } catch (Throwable t) {
+            throw new  ResponseStatusException(500,"Failed to fetch the user info",t);
         }
     }
 }

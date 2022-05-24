@@ -5,6 +5,7 @@ import lk.ijse.dep8.tasks.dto.UserDTO;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import javax.servlet.http.Part;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -57,11 +58,22 @@ public class UserService {
 
     }
 
-    public static void deleteUser(String userId) {
+    public static void deleteUser(Connection connection,String userId,String application) throws SQLException {
 
+        UserDAO.deleteUser(connection,userId);
+        new Thread(() -> {
+            Path imagePath = Paths.get(application, "uploads", userId);
+
+            try{
+                Files.deleteIfExists(imagePath);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+        }).start();
     }
 
-    public static UserDTO getUser(String userId) {
-        return null;
+    public static UserDTO getUser(Connection connection,String userIdOrEmail) throws SQLException {
+        return UserDAO.getUser(connection,userIdOrEmail);
     }
 }
