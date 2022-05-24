@@ -88,4 +88,17 @@ class UserDAOTest {
         //then
         UserDAO.existUser(connection,userId);
     }
+
+    @Test
+    void updateUser() throws SQLException {
+        //given
+        UserDTO user = UserDAO.getUser(connection, "25c00291-9a6c-4bd0-bc33-b97012faf741");
+        user.setName("Dulanga");
+        //when
+        UserDAO.updateUser(connection,user);
+
+        //then
+        UserDTO updatedUser = UserDAO.getUser(connection, "25c00291-9a6c-4bd0-bc33-b97012faf741");
+        assertEquals(user.getName(),updatedUser.getName());
+    }
 }
