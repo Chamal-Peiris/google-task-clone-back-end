@@ -1,8 +1,8 @@
-package lk.ijse.dep8.tasks.service;
+package lk.ijse.dep8.tasks.dao;
 
 import lk.ijse.dep8.tasks.dto.UserDTO;
 
-public class UserService {
+public class UserDAO {
     public static void saveUser(UserDTO user){
 
     }
