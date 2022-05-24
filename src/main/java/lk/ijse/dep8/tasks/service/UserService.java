@@ -5,12 +5,10 @@ import lk.ijse.dep8.tasks.dto.UserDTO;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import javax.servlet.http.Part;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.UUID;
 

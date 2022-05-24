@@ -1,18 +1,18 @@
 package lk.ijse.dep8.tasks.dao;
 
 import lk.ijse.dep8.tasks.dto.UserDTO;
-import org.apache.commons.codec.digest.DigestUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.UUID;
 
 public class UserDAO {
 
-    public static boolean existUser(Connection connection,String email) throws SQLException {
-        PreparedStatement stm = connection.prepareStatement("SELECT id FROM user WHERE email = ?");
-        stm.setString(1, email);
+
+    public static boolean existUser(Connection connection, String emailOrId) throws SQLException {
+        PreparedStatement stm = connection.prepareStatement("SELECT id FROM user WHERE email = ? OR id=?");
+        stm.setString(1, emailOrId);
+        stm.setString(2, emailOrId);
         return  (stm.executeQuery().next());
 
     }

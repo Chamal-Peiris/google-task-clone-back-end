@@ -6,7 +6,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 
-import javax.jws.soap.SOAPBinding;
 import java.sql.Connection ;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -59,5 +58,11 @@ void tearDown(){
 
 
 
+    }
+
+    @Test
+    void testExistUser() throws SQLException {
+        boolean result = UserDAO.existUser(connection, "25c00291-9a6c-4bd0-bc33-b97012faf741");
+        assertTrue(result);
     }
 }
