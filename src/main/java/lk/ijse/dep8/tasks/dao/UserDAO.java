@@ -1,5 +1,6 @@
 package lk.ijse.dep8.tasks.dao;
 
+import lk.ijse.dep8.tasks.dao.exception.DataAccessException;
 import lk.ijse.dep8.tasks.entities.User;
 
 import java.sql.*;
@@ -52,7 +53,7 @@ public class UserDAO {
             stm = connection.prepareStatement("DELETE FROM user WHERE id =?");
             stm.setString(1,id);
             if(stm.executeUpdate()!=1){
-                throw new SQLException("Failed to delete the user");
+                throw new DataAccessException("No User Found");
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
