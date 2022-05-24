@@ -46,6 +46,7 @@ public class UserServlet extends HttpServlet2 {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
         if (request.getContentType() == null || !request.getContentType().startsWith("multipart/form-data")) {
             throw new ResponseStatusException(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE, "Invalid content type or no content type is provided");
         }
@@ -70,23 +71,28 @@ public class UserServlet extends HttpServlet2 {
         }
 
         try (Connection connection = pool.getConnection()) {
-            if (UserService.existUser(connection, email)) {
+            if (new UserService().existsUser(connection, email)) {
                 throw new ResponseStatusException(HttpServletResponse.SC_CONFLICT, "A user has been already registered with this email");
             }
 
+            String pictureUrl = null;
+            if (picture != null) {
+                pictureUrl = request.getScheme() + "://" + request.getServerName() + ":"
+                        + request.getServerPort() + request.getContextPath() + "/uploads/";
+            }
+            UserDTO user = new UserDTO(null, name, email, password, pictureUrl);
 
-            UserDTO user = new UserDTO(null, name, email, password, null);
-            String pictureUrl = request.getScheme() + "://" + request.getServerName() + ":"
-                    + request.getServerPort() + request.getContextPath();
-            user = UserService.registerUser(connection, picture, pictureUrl,
+            user = new UserService().registerUser(connection, picture,
                     getServletContext().getRealPath("/"), user);
 
             response.setStatus(HttpServletResponse.SC_CREATED);
             response.setContentType("application/json");
             Jsonb jsonb = JsonbBuilder.create();
             jsonb.toJson(user, response.getWriter());
-        } catch (Throwable t) {
-            throw new ResponseStatusException(500,"Failed to fetch the user info",t);
+        }catch (ResponseStatusException e){
+            throw e;
+        } catch (Throwable e) {
+            throw new ResponseStatusException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to register the user", e);
         }
     }
 
@@ -95,10 +101,13 @@ public class UserServlet extends HttpServlet2 {
 
         UserDTO user = getUser(req);
         try (Connection connection = pool.getConnection()) {
-           UserService.deleteUser(connection, user.getId(), getServletContext().getRealPath("/"));
+            new UserService().deleteUser(connection, user.getId(),
+                    getServletContext().getRealPath("/"));
             resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
-        } catch (Throwable t) {
-            throw new ResponseStatusException(500, t.getMessage(), t);
+        }catch (ResponseStatusException e){
+            throw e;
+        } catch (Throwable e) {
+            throw new ResponseStatusException(500, e.getMessage(), e);
         }
 
     }
@@ -131,10 +140,12 @@ public class UserServlet extends HttpServlet2 {
                         + request.getServerPort() + request.getContextPath();
                 pictureUrl += "/uploads/" + user.getId();
             }
-            UserService.updateUser(connection, new UserDTO(user.getId(), name, user.getEmail(), password, pictureUrl),
+            new UserService().updateUser(connection, new UserDTO(user.getId(), name, user.getEmail(), password, pictureUrl),
                     picture, getServletContext().getRealPath("/"));
 
             response.setStatus(204);
+        }catch (ResponseStatusException e){
+            throw e;
         } catch (Throwable e) {
             throw new ResponseStatusException(500, e.getMessage(), e);
         }
@@ -149,10 +160,10 @@ public class UserServlet extends HttpServlet2 {
         String userId = req.getPathInfo().replace("/", "");
         try (Connection connection = pool.getConnection()) {
 
-            if (!UserService.existUser(connection,userId)) {
+            if (!new UserService().existsUser(connection,userId)) {
                 throw new ResponseStatusException(404, "Invalid User Id");
             } else {
-               return UserService.getUser(connection,userId);
+               return new UserService().getUser(connection,userId);
 
             }
 

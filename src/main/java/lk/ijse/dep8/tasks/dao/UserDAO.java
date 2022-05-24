@@ -11,59 +11,62 @@ import java.sql.SQLException;
 public class UserDAO {
 
 
-    public static UserDTO getUser(Connection connection, String emailOrId) throws SQLException {
-        PreparedStatement stm = connection.prepareStatement("SELECT * FROM user WHERE email = ? OR id=?");
+    public  UserDTO getUser(Connection connection, String emailOrId) throws SQLException {
+        PreparedStatement stm = connection.
+                prepareStatement("SELECT * FROM user WHERE email = ? OR id = ?");
         stm.setString(1, emailOrId);
         stm.setString(2, emailOrId);
         ResultSet rst = stm.executeQuery();
-        if(rst.next()){
-            return new UserDTO(rst.getString("id"),rst.getString("full_name"),rst.getString("email"), rst.getString("password"), rst.getString("profile_pic"));
-
-        }else {
+        if (rst.next()) {
+            return new UserDTO(rst.getString("id"),
+                    rst.getString("full_name"),
+                    rst.getString("email"),
+                    rst.getString("password"),
+                    rst.getString("profile_pic"));
+        } else {
             return null;
         }
-
     }
-    public static boolean existUser(Connection connection, String emailOrId) throws SQLException {
-        PreparedStatement stm = connection.prepareStatement("SELECT id FROM user WHERE email = ? OR id=?");
+
+    public  boolean existsUser(Connection connection, String emailOrId) throws SQLException {
+        PreparedStatement stm = connection.
+                prepareStatement("SELECT id FROM user WHERE email = ? OR id = ?");
         stm.setString(1, emailOrId);
         stm.setString(2, emailOrId);
-        return  (stm.executeQuery().next());
-
+        return (stm.executeQuery().next());
     }
-    public static UserDTO saveUser(Connection connection,UserDTO user) throws SQLException{
+
+    public  UserDTO saveUser(Connection connection, UserDTO user) throws SQLException {
         PreparedStatement stm = connection.
                 prepareStatement("INSERT INTO user (id, email, password, full_name, profile_pic) VALUES (?, ?, ?, ?, ?)");
-
         stm.setString(1, user.getId());
         stm.setString(2, user.getEmail());
         stm.setString(3, user.getPassword());
         stm.setString(4, user.getName());
         stm.setString(5, user.getPicture());
-
-        if(stm.executeUpdate()!=1){
+        if (stm.executeUpdate() != 1) {
             throw new SQLException("Failed to save the user");
         }
         return user;
     }
-    public static void updateUser(Connection connection,UserDTO user) throws SQLException{
-        PreparedStatement stm = connection.prepareStatement("UPDATE user SET full_name=?, password=?, profile_pic=? WHERE id=?");
+
+    public  void updateUser(Connection connection, UserDTO user) throws SQLException {
+        PreparedStatement stm = connection.
+                prepareStatement("UPDATE user SET full_name=?, password=?, profile_pic=? WHERE id=?");
         stm.setString(1, user.getName());
         stm.setString(2, user.getPassword());
         stm.setString(3, user.getPicture());
         stm.setString(4, user.getId());
-
-        if(stm.executeUpdate()!=1){
+        if (stm.executeUpdate() != 1){
             throw new SQLException("Failed to update the user");
         }
-
     }
-    public static void deleteUser(Connection connection,String userId)throws SQLException{
+
+    public  void deleteUser(Connection connection, String userId) throws SQLException {
         PreparedStatement stm = connection.prepareStatement("DELETE FROM user WHERE id=?");
         stm.setString(1, userId);
-        if(stm.executeUpdate()!=1){
+        if (stm.executeUpdate() != 1){
             throw new SQLException("Failed to delete the user");
         }
     }
-
 }
