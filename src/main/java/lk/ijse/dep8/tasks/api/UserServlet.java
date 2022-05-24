@@ -74,6 +74,7 @@ public class UserServlet extends HttpServlet2 {
                 throw new ResponseStatusException(HttpServletResponse.SC_CONFLICT, "A user has been already registered with this email");
             }
 
+
             UserDTO user = new UserDTO(null, name, email, password, null);
             String pictureUrl = request.getScheme() + "://" + request.getServerName() + ":"
                     + request.getServerPort() + request.getContextPath();
