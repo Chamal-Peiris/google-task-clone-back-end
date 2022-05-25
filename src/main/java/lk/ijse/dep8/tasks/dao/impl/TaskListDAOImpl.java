@@ -10,7 +10,36 @@ import java.util.List;
 import java.util.Optional;
 
 public class TaskListDAOImpl implements TaskListDAO {
+    @Override
+    public boolean existById(Integer pk) {
+        return false;
+    }
 
+    @Override
+    public Task_list save(Task_list entity) {
+        return null;
+    }
+
+    @Override
+    public void deleteById(Integer pk) {
+
+    }
+
+    @Override
+    public Optional<Task_list> findById(Integer pk) {
+        return Optional.empty();
+    }
+
+    @Override
+    public List<Task_list> findAll() {
+        return null;
+    }
+
+    @Override
+    public long count() {
+        return 0;
+    }
+/*
     private Connection connection;
 
     public TaskListDAOImpl(Connection connection) {
@@ -129,5 +158,5 @@ public class TaskListDAOImpl implements TaskListDAO {
             throw new RuntimeException(e);
         }
 
-    }
+    }*/
 }

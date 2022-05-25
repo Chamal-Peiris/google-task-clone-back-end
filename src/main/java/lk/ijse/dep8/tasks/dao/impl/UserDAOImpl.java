@@ -75,7 +75,7 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public void deleteById(String userId) {
         try {
-            if (!existsById(userId)){
+            if (!existById(userId)){
                 throw new DataAccessException("No user found");
             }
             PreparedStatement stm = connection.prepareStatement("DELETE FROM user WHERE id=?");
