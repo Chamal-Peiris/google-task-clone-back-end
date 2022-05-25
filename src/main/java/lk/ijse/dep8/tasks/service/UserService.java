@@ -1,5 +1,6 @@
 package lk.ijse.dep8.tasks.service;
 
+import lk.ijse.dep8.tasks.dao.UserDAO;
 import lk.ijse.dep8.tasks.dao.impl.UserDAOImpl;
 import lk.ijse.dep8.tasks.dto.UserDTO;
 import lk.ijse.dep8.tasks.entities.User;
@@ -20,7 +21,7 @@ public class UserService {
     private  final Logger logger = Logger.getLogger(UserService.class.getName());
 
     public  boolean existsUser(Connection connection, String userIdOrEmail) throws SQLException {
-        UserDAOImpl userDAO = new UserDAOImpl(connection);
+        UserDAO userDAO = new UserDAOImpl(connection);
         return userDAO.existsUserByEmailOrId(userIdOrEmail);
     }
 
@@ -36,7 +37,7 @@ public class UserService {
             }
             user.setPassword(DigestUtils.sha256Hex(user.getPassword()));
 
-            UserDAOImpl userDAO = new UserDAOImpl(connection);
+            UserDAO userDAO = new UserDAOImpl(connection);
             // DTO -> Entity
             User userEntity = new User(user.getId(), user.getEmail(), user.getPassword(), user.getName(), user.getPicture());
             User savedUser = userDAO.saveUser(userEntity);
@@ -65,14 +66,14 @@ public class UserService {
     }
 
     public  UserDTO getUser(Connection connection, String userIdOrEmail) throws SQLException {
-        UserDAOImpl userDAO = new UserDAOImpl(connection);
+        UserDAO userDAO = new UserDAOImpl(connection);
         Optional<User> userWrapper = userDAO.findUserByIdOrEmail(userIdOrEmail);
         return userWrapper.map(e -> new UserDTO(e.getId(), e.getFullName(), e.getEmail(),
                 e.getPassword(), e.getProfilePic())).orElse(null);
     }
 
     public  void deleteUser(Connection connection, String userId, String appLocation) throws SQLException {
-        UserDAOImpl userDAO = new UserDAOImpl(connection);
+        UserDAO userDAO = new UserDAOImpl(connection);
         userDAO.deleteUserById(userId);
 
         new Thread(() -> {
@@ -93,7 +94,7 @@ public class UserService {
 
             user.setPassword(DigestUtils.sha256Hex(user.getPassword()));
 
-            UserDAOImpl userDAO = new UserDAOImpl(connection);
+            UserDAO userDAO = new UserDAOImpl(connection);
 
             // Fetch the current user
             User userEntity = userDAO.findUserById(user.getId()).get();
