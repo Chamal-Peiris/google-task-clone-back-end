@@ -1,6 +1,7 @@
 package lk.ijse.dep8.tasks.dao;
 
 import lk.ijse.dep8.tasks.dao.exception.DataAccessException;
+import lk.ijse.dep8.tasks.dao.impl.UserDAOImpl;
 import lk.ijse.dep8.tasks.entities.User;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -20,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class UserDAOTest {
     private static Connection connection;
 
-    private static UserDAO userDAO;
+    private static UserDAOImpl userDAO;
 
     @AfterAll
     static void setUp() {
@@ -28,7 +29,7 @@ class UserDAOTest {
             Class.forName("com.mysql.cj.jdbc.Driver");
             connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/dep8_task", "root", "12345678");
             connection.setAutoCommit(false);
-            userDAO = new UserDAO(connection);
+            userDAO = new UserDAOImpl(connection);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         } catch (SQLException e) {
