@@ -17,29 +17,29 @@ public class TaskListDAO {
         this.connection = connection;
     }
 
-    public User saveTaskList(Task_list task_list) {
+    public Task_list saveTaskList(Task_list taskList) {
         try {
-            if (!existsById(task_list.getId())) {
+            if (!existsById(taskList.getId())) {
 
                 PreparedStatement stm = connection.prepareStatement("INSERT INTO task_list (id,name,user_id) VALUES (?,?,?)");
-                stm.setInt(1,task_list.getId());
-                stm.setString(2,task_list.getName());
-                stm.setString(3, task_list.getUserId());
+                stm.setInt(1,taskList.getId());
+                stm.setString(2,taskList.getName());
+                stm.setString(3, taskList.getUserId());
                 if(stm.executeUpdate()!=1){
                     throw new SQLException("Failed to save the task");
                 }
             }else{
                 PreparedStatement stm = connection.prepareStatement("UPDATE task_list SET name=?,user_id?WHERE id=?");
-                stm.setString(1, task_list.getName());
-                stm.setString(2, task_list.getUserId());
-                stm.setInt(3,task_list.getId());
+                stm.setString(1, taskList.getName());
+                stm.setString(2, taskList.getUserId());
+                stm.setInt(3,taskList.getId());
 
                 if(stm.executeUpdate()!=1){
                     throw new SQLException("Failed to update the task");
                 }
 
             }
-            return task_list;
+            return taskList;
         }catch (SQLException e){
             throw new RuntimeException(e);
         }
@@ -61,11 +61,11 @@ public class TaskListDAO {
 
     }
 
-    public Optional<Task_list> findTaskById(int task_id) {
+    public Optional<Task_list> findTaskById(int taskId) {
         PreparedStatement stm = null;
         try {
             stm = connection.prepareStatement("SELECT * FROM task_list WHERE id=?");
-            stm.setInt(1,task_id);
+            stm.setInt(1,taskId);
             ResultSet rst = stm.executeQuery();
             if(rst.next()){
                 return Optional.of(new Task_list(rst.getInt("id"), rst.getString("name"), rst.getString("user_id") ));
