@@ -17,9 +17,11 @@ public class TaskListDAOImpl implements TaskListDAO {
         this.connection = connection;
     }
 
-    public Task_list saveTaskList(Task_list taskList) {
+    @Override
+    public Object save(Object entity) {
+        Task_list task_list= (Task_list) entity;
         try {
-            if (!existsById(taskList.getId())) {
+            if (!existById(taskList.getId())) {
 
                 PreparedStatement stm = connection.prepareStatement("INSERT INTO task_list (id,name,user_id) VALUES (?,?,?)");
                 stm.setInt(1,taskList.getId());
@@ -45,7 +47,8 @@ public class TaskListDAOImpl implements TaskListDAO {
         }
     }
 
-    public void deleteTaskById(int id) {
+    @Override
+    public void deleteById(Object id) {
         PreparedStatement stm = null;
         try {
             stm = connection.prepareStatement("DELETE FROM task_list WHERE id =?");
@@ -61,7 +64,8 @@ public class TaskListDAOImpl implements TaskListDAO {
 
     }
 
-    public Optional<Task_list> findTaskById(int taskId) {
+    @Override
+    public Optional<Object> findById(Object taskId) {
         PreparedStatement stm = null;
         try {
             stm = connection.prepareStatement("SELECT * FROM task_list WHERE id=?");
@@ -80,11 +84,12 @@ public class TaskListDAOImpl implements TaskListDAO {
 
     }
 
-    public boolean existsById(int taskId) {
+    @Override
+    public boolean existById(Object taskId) {
         PreparedStatement stm = null;
         try {
             stm = connection.prepareStatement("SELECT id FROM  task_list WHERE id=?");
-            stm.setInt(1, taskId);
+            stm.setInt(1, (Integer) taskId);
             return stm.executeQuery().next();
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -93,7 +98,8 @@ public class TaskListDAOImpl implements TaskListDAO {
 
     }
 
-    public List<Task_list> findAllTasks() {
+    @Override
+    public List<Object> findAll() {
 
 
         try {

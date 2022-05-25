@@ -12,11 +12,12 @@ import java.util.Optional;
 public class TaskDAOImpl implements TaskDAO {
     private Connection connection;
 
+
     public TaskDAOImpl(Connection connection){
         this.connection=connection;
     }
-
-    public Task saveTask(Task task){
+    @Override
+    public Object save(Object task){
         try {
             if (!existsTaskById(task.getId())){
                 PreparedStatement stm = connection.prepareStatement("INSERT INTO task (title, details, position, status, task_list_id) VALUES (?,?,?,?,?)");
@@ -45,8 +46,8 @@ public class TaskDAOImpl implements TaskDAO {
             throw new RuntimeException(e);
         }
     }
-
-    public void deleteTaskById(int taskId){
+    @Override
+    public void deleteById(Object taskId){
         try {
             if (!existsTaskById(taskId)){
                 throw new DataAccessException("No user Found!");
@@ -62,7 +63,8 @@ public class TaskDAOImpl implements TaskDAO {
 
     }
 
-    public Optional<Task> findTaskById(int taskId){
+    @Override
+    public Optional<Object> findById(Object taskId){
         try {
             PreparedStatement stm = connection.prepareStatement("SELECT * FROM task WHERE id=?");
             stm.setInt(1,taskId);
@@ -82,7 +84,8 @@ public class TaskDAOImpl implements TaskDAO {
         }
     }
 
-    public boolean existsTaskById(int taskId){
+    @Override
+    public boolean existById(Object taskId){
         try {
             PreparedStatement stm = connection.prepareStatement("SELECT * FROM task WHERE id=?");
             stm.setInt(1,taskId);
@@ -92,7 +95,8 @@ public class TaskDAOImpl implements TaskDAO {
         }
     }
 
-    public List<Task> findAllTasks(String taskId){
+    @Override
+    public List<Object> findAllTasks(Object taskId){
         try {
             Statement stm = connection.createStatement();
             ResultSet rst = stm.executeQuery("SELECT * FROM task");

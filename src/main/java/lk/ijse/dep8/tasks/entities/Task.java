@@ -8,7 +8,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class Task implements Serializable {
+public class Task implements SuperEntity {
     int id;
     String title;
     String details;
