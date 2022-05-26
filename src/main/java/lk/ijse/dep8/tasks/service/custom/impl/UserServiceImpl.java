@@ -1,10 +1,10 @@
-package lk.ijse.dep8.tasks.service;
+package lk.ijse.dep8.tasks.service.custom.impl;
 
 import lk.ijse.dep8.tasks.dao.DaoFactory;
-import lk.ijse.dep8.tasks.dao.UserDAO;
-import lk.ijse.dep8.tasks.dao.impl.UserDAOImpl;
+import lk.ijse.dep8.tasks.dao.custom.UserDAO;
 import lk.ijse.dep8.tasks.dto.UserDTO;
 import lk.ijse.dep8.tasks.entities.User;
+import lk.ijse.dep8.tasks.service.custom.UserService;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import javax.servlet.http.Part;
@@ -18,17 +18,17 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-public class UserService {
+public class UserServiceImpl implements UserService {
     private  final Logger logger = Logger.getLogger(UserService.class.getName());
 
     public  boolean existsUser(Connection connection, String userIdOrEmail) throws SQLException {
-        UserDAO userDAO = DaoFactory.getInstance().getUserDao(connection);
+        UserDAO userDAO = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.USER);
         return userDAO.existsUserByEmailOrId(userIdOrEmail);
     }
 
-    public  UserDTO registerUser(Connection connection, Part picture,
-                                 String appLocation,
-                                 UserDTO user) throws SQLException{
+    public UserDTO registerUser(Connection connection, Part picture,
+                                String appLocation,
+                                UserDTO user) throws SQLException{
         try {
             connection.setAutoCommit(false);
             user.setId(UUID.randomUUID().toString());
@@ -38,7 +38,7 @@ public class UserService {
             }
             user.setPassword(DigestUtils.sha256Hex(user.getPassword()));
 
-            UserDAO userDAO = DaoFactory.getInstance().getUserDao(connection); ///getting user dao
+            UserDAO userDAO = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.USER); ///getting user dao
             // DTO -> Entity
             User userEntity = new User(user.getId(), user.getEmail(), user.getPassword(), user.getName(), user.getPicture());
             User savedUser = userDAO.save(userEntity);
@@ -67,14 +67,14 @@ public class UserService {
     }
 
     public  UserDTO getUser(Connection connection, String userIdOrEmail) throws SQLException {
-        UserDAO userDAO = DaoFactory.getInstance().getUserDao(connection);
+        UserDAO userDAO = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.USER);
         Optional<User> userWrapper = userDAO.findUserByIdOrEmail(userIdOrEmail);
         return userWrapper.map(e -> new UserDTO(e.getId(), e.getFullName(), e.getEmail(),
                 e.getPassword(), e.getProfilePic())).orElse(null);
     }
 
     public  void deleteUser(Connection connection, String userId, String appLocation) throws SQLException {
-        UserDAO userDAO = DaoFactory.getInstance().getUserDao(connection);
+        UserDAO userDAO = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.USER);
         userDAO.deleteById(userId);
 
         new Thread(() -> {
@@ -95,7 +95,7 @@ public class UserService {
 
             user.setPassword(DigestUtils.sha256Hex(user.getPassword()));
 
-            UserDAO userDAO = DaoFactory.getInstance().getUserDao(connection);
+            UserDAO userDAO = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.USER);
 
             // Fetch the current user
             User userEntity = userDAO.findById(user.getId()).get();

@@ -1,6 +1,14 @@
 package lk.ijse.dep8.tasks.dao;
 
-import lk.ijse.dep8.tasks.dao.impl.*;
+import lk.ijse.dep8.tasks.dao.custom.QueryDAO;
+import lk.ijse.dep8.tasks.dao.custom.TaskDAO;
+import lk.ijse.dep8.tasks.dao.custom.TaskListDAO;
+import lk.ijse.dep8.tasks.dao.custom.UserDAO;
+import lk.ijse.dep8.tasks.dao.custom.impl.QueryDAOImpl;
+import lk.ijse.dep8.tasks.dao.custom.impl.TaskDAOImpl;
+import lk.ijse.dep8.tasks.dao.custom.impl.TaskListDAOImpl;
+import lk.ijse.dep8.tasks.dao.custom.impl.UserDAOImpl;
+import lk.ijse.dep8.tasks.dao.custom.impl.*;
 
 import java.sql.Connection;
 
