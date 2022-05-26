@@ -1,7 +1,7 @@
 package lk.ijse.dep8.tasks.dao.custom.impl;
 
 import lk.ijse.dep8.tasks.dao.custom.TaskListDAO;
-import lk.ijse.dep8.tasks.entities.Task_list;
+import lk.ijse.dep8.tasks.entities.TaskList;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,7 +13,7 @@ public class TaskListDAOImpl implements TaskListDAO {
     }
 
     @Override
-    public Task_list save(Task_list entity) {
+    public TaskList save(TaskList entity) {
         return null;
     }
 
@@ -23,12 +23,12 @@ public class TaskListDAOImpl implements TaskListDAO {
     }
 
     @Override
-    public Optional<Task_list> findById(Integer pk) {
+    public Optional<TaskList> findById(Integer pk) {
         return Optional.empty();
     }
 
     @Override
-    public List<Task_list> findAll() {
+    public List<TaskList> findAll() {
         return null;
     }
 

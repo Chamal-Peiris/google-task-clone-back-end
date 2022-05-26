@@ -4,7 +4,7 @@ import lk.ijse.dep8.tasks.dto.TaskDTO;
 import lk.ijse.dep8.tasks.dto.TaskListDTO;
 import lk.ijse.dep8.tasks.dto.UserDTO;
 import lk.ijse.dep8.tasks.entities.Task;
-import lk.ijse.dep8.tasks.entities.Task_list;
+import lk.ijse.dep8.tasks.entities.TaskList;
 import lk.ijse.dep8.tasks.entities.User;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
@@ -35,7 +35,7 @@ class EntityDtoMapperTest {
     @RepeatedTest(10)
     @Test
     void getTaskListDTO() {
-        Task_list task_list = new Task_list(1, "Hii", "C001");
+        TaskList task_list = new TaskList(1, "Hii", "C001");
         TaskListDTO taskListDTO = EntityDtoMapper.getTaskListDTO(task_list);
         System.out.println(taskListDTO);
         System.out.println(task_list);

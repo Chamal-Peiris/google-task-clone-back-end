@@ -4,10 +4,9 @@ import lk.ijse.dep8.tasks.dto.TaskDTO;
 import lk.ijse.dep8.tasks.dto.TaskListDTO;
 import lk.ijse.dep8.tasks.dto.UserDTO;
 import lk.ijse.dep8.tasks.entities.Task;
-import lk.ijse.dep8.tasks.entities.Task_list;
+import lk.ijse.dep8.tasks.entities.TaskList;
 import lk.ijse.dep8.tasks.entities.User;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeMap;
 
 public class EntityDtoMapper {
 
@@ -18,10 +17,10 @@ public class EntityDtoMapper {
                 .map(user);
     }
 
-    public static TaskListDTO getTaskListDTO(Task_list taskList) {
+    public static TaskListDTO getTaskListDTO(TaskList taskList) {
         ModelMapper mapper = new ModelMapper();
-        return mapper.typeMap(Task_list.class, TaskListDTO.class)
-                .addMapping(Task_list::getName, TaskListDTO::setTitle)
+        return mapper.typeMap(TaskList.class, TaskListDTO.class)
+                .addMapping(TaskList::getName, TaskListDTO::setTitle)
                 .map(taskList);
     }
 
@@ -39,10 +38,10 @@ public class EntityDtoMapper {
                 .map(userDTO);
     }
 
-    public static Task_list getTaskList(TaskListDTO taskListDTO){
+    public static TaskList getTaskList(TaskListDTO taskListDTO){
         ModelMapper mapper = new ModelMapper();
-        return mapper.typeMap(TaskListDTO.class, Task_list.class)
-                .addMapping(TaskListDTO::getTitle, Task_list::setName)
+        return mapper.typeMap(TaskListDTO.class, TaskList.class)
+                .addMapping(TaskListDTO::getTitle, TaskList::setName)
                 .map(taskListDTO);
     }
 
