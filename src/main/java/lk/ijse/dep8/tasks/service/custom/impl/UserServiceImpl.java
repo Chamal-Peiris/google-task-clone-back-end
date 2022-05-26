@@ -5,6 +5,8 @@ import lk.ijse.dep8.tasks.dao.custom.UserDAO;
 import lk.ijse.dep8.tasks.dto.UserDTO;
 import lk.ijse.dep8.tasks.entities.User;
 import lk.ijse.dep8.tasks.service.custom.UserService;
+import lk.ijse.dep8.tasks.service.exception.FailedExecutionException;
+import lk.ijse.dep8.tasks.service.util.ExecutionContext;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import javax.servlet.http.Part;
@@ -16,19 +18,25 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class UserServiceImpl implements UserService {
+
+    private Connection connection;
+    public UserServiceImpl(Connection connection){
+        this.connection=connection;
+    }
     private  final Logger logger = Logger.getLogger(UserService.class.getName());
 
-    public  boolean existsUser(Connection connection, String userIdOrEmail) throws SQLException {
+    public  boolean existsUser( String userIdOrEmail)  {
         UserDAO userDAO = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.USER);
         return userDAO.existsUserByEmailOrId(userIdOrEmail);
     }
 
-    public UserDTO registerUser(Connection connection, Part picture,
+    public UserDTO registerUser( Part picture,
                                 String appLocation,
-                                UserDTO user) throws SQLException{
+                                UserDTO user) {
         try {
             connection.setAutoCommit(false);
             user.setId(UUID.randomUUID().toString());
@@ -58,22 +66,24 @@ public class UserServiceImpl implements UserService {
 
             connection.commit();
             return user;
-        }catch (Throwable t){
-            connection.rollback();
-            throw new RuntimeException(t);
-        }finally{
-            connection.setAutoCommit(true);
+        } catch (Throwable t) {
+            ExecutionContext.execute(connection::rollback);
+            throw new FailedExecutionException("Failed to save he user",t);
+
+        } finally {
+            ExecutionContext.execute(()->connection.setAutoCommit(true));
         }
+
     }
 
-    public  UserDTO getUser(Connection connection, String userIdOrEmail) throws SQLException {
+    public  UserDTO getUser( String userIdOrEmail)  {
         UserDAO userDAO = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.USER);
         Optional<User> userWrapper = userDAO.findUserByIdOrEmail(userIdOrEmail);
         return userWrapper.map(e -> new UserDTO(e.getId(), e.getFullName(), e.getEmail(),
                 e.getPassword(), e.getProfilePic())).orElse(null);
     }
 
-    public  void deleteUser(Connection connection, String userId, String appLocation) throws SQLException {
+    public  void deleteUser( String userId, String appLocation)  {
         UserDAO userDAO = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.USER);
         userDAO.deleteById(userId);
 
@@ -88,8 +98,8 @@ public class UserServiceImpl implements UserService {
         }).start();
     }
 
-    public  void updateUser(Connection connection, UserDTO user, Part picture,
-                            String appLocation) throws SQLException {
+    public  void updateUser( UserDTO user, Part picture,
+                            String appLocation)  {
         try {
             connection.setAutoCommit(false);
 
@@ -121,11 +131,12 @@ public class UserServiceImpl implements UserService {
             }
 
             connection.commit();
-        } catch (Throwable e) {
-            connection.rollback();
-            throw new RuntimeException(e);
-        } finally{
-            connection.setAutoCommit(true);
+        }catch (Throwable t) {
+            ExecutionContext.execute(connection::rollback);
+            throw new FailedExecutionException("Failed to update user",t);
+
+        } finally {
+            ExecutionContext.execute(()->connection.setAutoCommit(true));
         }
     }
 }

@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.PrivateKey;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Optional;
@@ -20,5 +21,14 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 public interface UserService extends SuperSevice {
+
+    public  boolean existsUser( String userIdOrEmail);
+    public UserDTO registerUser( Part picture,
+                                String appLocation,
+                                UserDTO user) throws SQLException;
+    public  UserDTO getUser(String userIdOrEmail);
+    public  void deleteUser( String userId, String appLocation);
+    public  void updateUser(UserDTO user, Part picture,
+                            String appLocation);
 
 }

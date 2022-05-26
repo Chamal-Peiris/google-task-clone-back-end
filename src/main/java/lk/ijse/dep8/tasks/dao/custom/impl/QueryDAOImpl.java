@@ -4,7 +4,7 @@ import lk.ijse.dep8.tasks.dao.custom.QueryDAO;
 
 import java.sql.Connection;
 
-public class QueryDAOImpl extends QueryDAO {
+public class QueryDAOImpl implements QueryDAO {
     private Connection connection;
 
 
