@@ -18,7 +18,7 @@ public class JNDIConnectionPool {
             InitialContext ctx = new InitialContext();
             return (DataSource)ctx.lookup("java:comp/env/jdbc/pool") ;
         } catch (NamingException e) {
-            throw new FailedExecutionException("Failed to lookup the pool",e)
+            throw new FailedExecutionException("Failed to lookup the pool",e);
         }
 
 

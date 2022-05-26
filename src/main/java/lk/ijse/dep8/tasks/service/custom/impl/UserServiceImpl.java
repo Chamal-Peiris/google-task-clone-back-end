@@ -1,5 +1,6 @@
 package lk.ijse.dep8.tasks.service.custom.impl;
 
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import lk.ijse.dep8.tasks.dao.DaoFactory;
 import lk.ijse.dep8.tasks.dao.custom.UserDAO;
 import lk.ijse.dep8.tasks.dto.UserDTO;
@@ -8,9 +9,11 @@ import lk.ijse.dep8.tasks.service.custom.UserService;
 import lk.ijse.dep8.tasks.service.exception.FailedExecutionException;
 import lk.ijse.dep8.tasks.service.util.EntityDtoMapper;
 import lk.ijse.dep8.tasks.service.util.ExecutionContext;
+import lk.ijse.dep8.tasks.util.JNDIConnectionPool;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import javax.servlet.http.Part;
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,21 +27,29 @@ import java.util.logging.Logger;
 
 public class UserServiceImpl implements UserService {
 
-    private Connection connection;
-    public UserServiceImpl(Connection connection){
-        this.connection=connection;
+    private DataSource dataSource;
+
+    public UserServiceImpl(DataSource dataSource) {
+        this.dataSource = JNDIConnectionPool.getInstance().getDataSource();
     }
+
     private  final Logger logger = Logger.getLogger(UserService.class.getName());
 
     public  boolean existsUser( String userIdOrEmail)  {
-        UserDAO userDAO = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.USER);
-        return userDAO.existsUserByEmailOrId(userIdOrEmail);
+        try(Connection connection=dataSource.getConnection()) {
+            UserDAO userDAO = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.USER);
+            return userDAO.existsUserByEmailOrId(userIdOrEmail);
+        } catch (Exception e) {
+            throw new FailedExecutionException("Failed to check the existence");
+        }
     }
 
     public UserDTO registerUser( Part picture,
                                 String appLocation,
                                 UserDTO user) {
+        Connection connection=null;
         try {
+            connection=dataSource.getConnection();
             connection.setAutoCommit(false);
             user.setId(UUID.randomUUID().toString());
 
@@ -72,39 +83,54 @@ public class UserServiceImpl implements UserService {
             connection.commit();
             return user;
         } catch (Throwable t) {
+            if(connection!=null)
             ExecutionContext.execute(connection::rollback);
             throw new FailedExecutionException("Failed to save he user",t);
 
         } finally {
-            ExecutionContext.execute(()->connection.setAutoCommit(true));
+          if(connection!=null){
+              Connection tempConnection=connection;
+              ExecutionContext.execute(()->tempConnection.setAutoCommit(true));
+          }
         }
 
     }
 
     public  UserDTO getUser( String userIdOrEmail)  {
-        UserDAO userDAO = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.USER);
-        Optional<User> userWrapper = userDAO.findUserByIdOrEmail(userIdOrEmail);
-        return  EntityDtoMapper.getUserDTO(userWrapper.orElse(null));
+        try(Connection connection= dataSource.getConnection()){
+            UserDAO userDAO = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.USER);
+            Optional<User> userWrapper = userDAO.findUserByIdOrEmail(userIdOrEmail);
+            return  EntityDtoMapper.getUserDTO(userWrapper.orElse(null));
+        }catch (SQLException t){
+            throw new FailedExecutionException("Failed to fetch teh user",t);
+        }
+
     }
 
     public  void deleteUser( String userId, String appLocation)  {
-        UserDAO userDAO = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.USER);
-        userDAO.deleteById(userId);
+     try(Connection connection= dataSource.getConnection()){
+         UserDAO userDAO = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.USER);
+         userDAO.deleteById(userId);
 
-        new Thread(() -> {
-            Path imagePath = Paths.get(appLocation, "uploads",
-                    userId);
-            try {
-                Files.deleteIfExists(imagePath);
-            } catch (IOException e) {
-                logger.warning("Failed to delete the image: " + imagePath.toAbsolutePath());
-            }
-        }).start();
+         new Thread(() -> {
+             Path imagePath = Paths.get(appLocation, "uploads",
+                     userId);
+             try {
+                 Files.deleteIfExists(imagePath);
+             } catch (IOException e) {
+                 logger.warning("Failed to delete the image: " + imagePath.toAbsolutePath());
+             }
+         }).start();
+     }catch (SQLException e){
+         throw new RuntimeException("failed to delete the user",e);
+     }
     }
 
     public  void updateUser( UserDTO user, Part picture,
                             String appLocation)  {
+        Connection connection=null;
         try {
+            connection= dataSource.getConnection();
             connection.setAutoCommit(false);
 
             user.setPassword(DigestUtils.sha256Hex(user.getPassword()));
@@ -136,11 +162,15 @@ public class UserServiceImpl implements UserService {
 
             connection.commit();
         }catch (Throwable t) {
+            if(connection!=null)
             ExecutionContext.execute(connection::rollback);
             throw new FailedExecutionException("Failed to update user",t);
 
         } finally {
-            ExecutionContext.execute(()->connection.setAutoCommit(true));
+           if(connection!=null){
+               Connection tempConnection=connection;
+               ExecutionContext.execute(()->tempConnection.setAutoCommit(true));
+           }
         }
     }
 }

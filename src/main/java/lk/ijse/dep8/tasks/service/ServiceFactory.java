@@ -16,12 +16,12 @@ public class ServiceFactory {
         return (serviceFactory==null)?(serviceFactory=new ServiceFactory()):serviceFactory;
     }
 
-    public <T extends SuperSevice>T getService(Connection connection,ServiceTypes serviceType){
+    public <T extends SuperSevice>T getService(ServiceTypes serviceType){
         switch (serviceType){
             case TASK:
-                return (T) new  UserServiceImpl(connection);
+                return (T) new  UserServiceImpl();
             case USER:
-                return (T) new  TaskServiceImpl(connection);
+                return (T) new  TaskServiceImpl();
             default:
                 return null;
         }
