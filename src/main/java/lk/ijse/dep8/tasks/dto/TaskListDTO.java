@@ -52,6 +52,10 @@ public class TaskListDTO implements Serializable {
 
     @Override
     public String toString() {
-        return super.toString();
+        return "TaskListDTO{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", user_id='" + user_id + '\'' +
+                '}';
     }
 }
