@@ -29,7 +29,7 @@ public class UserServiceImpl implements UserService {
 
     private DataSource dataSource;
 
-    public UserServiceImpl(DataSource dataSource) {
+    public UserServiceImpl() {
         this.dataSource = JNDIConnectionPool.getInstance().getDataSource();
     }
 
