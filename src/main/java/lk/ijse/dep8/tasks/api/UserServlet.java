@@ -4,6 +4,7 @@ import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 import lk.ijse.dep8.tasks.dto.UserDTO;
 import lk.ijse.dep8.tasks.service.custom.UserService;
+import lk.ijse.dep8.tasks.service.custom.impl.UserServiceImpl;
 import lk.ijse.dep8.tasks.util.HttpServlet2;
 import lk.ijse.dep8.tasks.util.ResponseStatusException;
 
@@ -14,25 +15,97 @@ import javax.servlet.annotation.*;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.sql.Connection;
+import java.util.logging.Logger;
 
 
 @WebServlet(name = "UserServlet")
 public class UserServlet extends HttpServlet2 {
 
+    private final Logger logger = Logger.getLogger(UserServlet.class.getName());
 
     @Resource(name = "java:comp/env/jdbc/pool")
     private volatile DataSource pool;
 
+    private UserDTO getUser(HttpServletRequest req) {
+        if (!(req.getPathInfo() != null &&
+                (req.getPathInfo().replaceAll("/", "").length() == 36))) {
+            throw new ResponseStatusException(404, "Invalid user id");
+        }
+
+        String userId = req.getPathInfo().replaceAll("/", "");
+
+        try (Connection connection = pool.getConnection()) {
+            if (!new UserServiceImpl(connection).existsUser(userId)) {
+                throw new ResponseStatusException(404, "Invalid user id");
+            } else {
+                return new UserServiceImpl(connection).getUser( userId);
+            }
+        }catch (ResponseStatusException e){
+            throw e;
+        } catch (Throwable e) {
+            throw new ResponseStatusException(500, "Failed to fetch the user info", e);
+        }
+    }
+
+    @Override
+    protected void doPatch(HttpServletRequest request, HttpServletResponse resp) throws ServletException, IOException {
+        if (request.getContentType() == null || !request.getContentType().startsWith("multipart/form-data")) {
+            throw new ResponseStatusException(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE, "Invalid content type or no content type is provided");
+        }
+
+        UserDTO user = getUser(request);
+
+        String name = request.getParameter("name");
+        String password = request.getParameter("password");
+        Part picture = request.getPart("picture");
+
+        if (name == null || !name.matches("[A-Za-z ]+")) {
+            throw new ResponseStatusException(HttpServletResponse.SC_BAD_REQUEST, "Invalid name or name is empty");
+        } else if (password == null || password.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpServletResponse.SC_BAD_REQUEST, "Password can't be empty");
+        } else if (picture != null && (picture.getSize() == 0 || !picture.getContentType().startsWith("image"))) {
+            throw new ResponseStatusException(HttpServletResponse.SC_BAD_REQUEST, "Invalid picture");
+        }
+
+        try (Connection connection = pool.getConnection()) {
+
+            String pictureUrl = null;
+            if (picture != null) {
+                pictureUrl = request.getScheme() + "://" + request.getServerName() + ":"
+                        + request.getServerPort() + request.getContextPath();
+                pictureUrl += "/uploads/" + user.getId();
+            }
+            new UserServiceImpl(connection).updateUser( new UserDTO(user.getId(), name, user.getEmail(), password, pictureUrl),
+                    picture, getServletContext().getRealPath("/"));
+
+            resp.setStatus(204);
+        }catch (ResponseStatusException e){
+            throw e;
+        } catch (Throwable e) {
+            throw new ResponseStatusException(500, e.getMessage(), e);
+        }
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        UserDTO user = getUser(req);
+        try (Connection connection = pool.getConnection()) {
+            new UserServiceImpl(connection).deleteUser( user.getId(),
+                    getServletContext().getRealPath("/"));
+            resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+        }catch (ResponseStatusException e){
+            throw e;
+        } catch (Throwable e) {
+            throw new ResponseStatusException(500, e.getMessage(), e);
+        }
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-
         UserDTO user = getUser(req);
         Jsonb jsonb = JsonbBuilder.create();
-        resp.setContentType("application./json");
+        resp.setContentType("application/json");
         jsonb.toJson(user, resp.getWriter());
-
-
     }
 
     @Override
@@ -62,7 +135,7 @@ public class UserServlet extends HttpServlet2 {
         }
 
         try (Connection connection = pool.getConnection()) {
-            if (new UserService(connection).existsUser(connection, email)) {
+            if (new UserServiceImpl(connection).existsUser( email)) {
                 throw new ResponseStatusException(HttpServletResponse.SC_CONFLICT, "A user has been already registered with this email");
             }
 
@@ -73,7 +146,7 @@ public class UserServlet extends HttpServlet2 {
             }
             UserDTO user = new UserDTO(null, name, email, password, pictureUrl);
 
-            user = new UserService().registerUser(connection, picture,
+            user = new UserServiceImpl(connection).registerUser( picture,
                     getServletContext().getRealPath("/"), user);
 
             response.setStatus(HttpServletResponse.SC_CREATED);
@@ -87,80 +160,5 @@ public class UserServlet extends HttpServlet2 {
         }
     }
 
-    @Override
-    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
-        UserDTO user = getUser(req);
-        try (Connection connection = pool.getConnection()) {
-            new UserService().deleteUser(connection, user.getId(),
-                    getServletContext().getRealPath("/"));
-            resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
-        }catch (ResponseStatusException e){
-            throw e;
-        } catch (Throwable e) {
-            throw new ResponseStatusException(500, e.getMessage(), e);
-        }
-
-    }
-
-    @Override
-    protected void doPatch(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        if (request.getContentType() == null || !request.getContentType().startsWith("multipart/form-data")) {
-            throw new ResponseStatusException(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE, "Invalid content type or no content type is provided");
-        }
-
-        UserDTO user = getUser(request);
-
-        String name = request.getParameter("name");
-        String password = request.getParameter("password");
-        Part picture = request.getPart("picture");
-
-        if (name == null || !name.matches("[A-Za-z ]+")) {
-            throw new ResponseStatusException(HttpServletResponse.SC_BAD_REQUEST, "Invalid name or name is empty");
-        } else if (password == null || password.trim().isEmpty()) {
-            throw new ResponseStatusException(HttpServletResponse.SC_BAD_REQUEST, "Password can't be empty");
-        } else if (picture != null && (picture.getSize() == 0 || !picture.getContentType().startsWith("image"))) {
-            throw new ResponseStatusException(HttpServletResponse.SC_BAD_REQUEST, "Invalid picture");
-        }
-
-        try (Connection connection = pool.getConnection()) {
-
-            String pictureUrl = null;
-            if (picture != null) {
-                pictureUrl = request.getScheme() + "://" + request.getServerName() + ":"
-                        + request.getServerPort() + request.getContextPath();
-                pictureUrl += "/uploads/" + user.getId();
-            }
-            new UserService().updateUser(connection, new UserDTO(user.getId(), name, user.getEmail(), password, pictureUrl),
-                    picture, getServletContext().getRealPath("/"));
-
-            response.setStatus(204);
-        }catch (ResponseStatusException e){
-            throw e;
-        } catch (Throwable e) {
-            throw new ResponseStatusException(500, e.getMessage(), e);
-        }
-    }
-
-    private UserDTO getUser(HttpServletRequest req) {
-        if (!(req.getPathInfo() != null &&
-                (req.getPathInfo().length() == 37 ||
-                        req.getPathInfo().length() == 38 && req.getPathInfo().endsWith("/")))) {
-            throw new ResponseStatusException(404, "Not found");
-        }
-        String userId = req.getPathInfo().replace("/", "");
-        try (Connection connection = pool.getConnection()) {
-
-            if (!new UserService().existsUser(connection,userId)) {
-                throw new ResponseStatusException(404, "Invalid User Id");
-            } else {
-               return new UserService().getUser(connection,userId);
-
-            }
-
-
-        } catch (Throwable t) {
-            throw new  ResponseStatusException(500,"Failed to fetch the user info",t);
-        }
-    }
 }
