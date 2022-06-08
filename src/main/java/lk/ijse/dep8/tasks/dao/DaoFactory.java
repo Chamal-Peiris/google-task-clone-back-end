@@ -1,14 +1,9 @@
 package lk.ijse.dep8.tasks.dao;
 
-import lk.ijse.dep8.tasks.dao.custom.QueryDAO;
-import lk.ijse.dep8.tasks.dao.custom.TaskDAO;
-import lk.ijse.dep8.tasks.dao.custom.TaskListDAO;
-import lk.ijse.dep8.tasks.dao.custom.UserDAO;
 import lk.ijse.dep8.tasks.dao.custom.impl.QueryDAOImpl;
 import lk.ijse.dep8.tasks.dao.custom.impl.TaskDAOImpl;
 import lk.ijse.dep8.tasks.dao.custom.impl.TaskListDAOImpl;
 import lk.ijse.dep8.tasks.dao.custom.impl.UserDAOImpl;
-import lk.ijse.dep8.tasks.dao.custom.impl.*;
 
 import java.sql.Connection;
 
@@ -26,7 +21,7 @@ public class DaoFactory {
             case USER:
                 return (T) new UserDAOImpl(connection);
             case TASK_LIST:
-                return (T) new TaskListDAOImpl(connection);
+              //  return (T) new TaskListDAOImpl(connection);
             case TASK:
                 return (T) new TaskDAOImpl(connection);
             case QUERY_DAO:

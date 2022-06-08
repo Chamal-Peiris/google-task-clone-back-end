@@ -1,176 +1,66 @@
 package lk.ijse.dep8.tasks.dao.custom.impl;
 
 import lk.ijse.dep8.tasks.dao.custom.TaskListDAO;
-import lk.ijse.dep8.tasks.dao.exception.DataAccessException;
 import lk.ijse.dep8.tasks.entities.TaskList;
+import org.hibernate.Session;
 
-import java.sql.*;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class TaskListDAOImpl implements TaskListDAO {
-    private Connection connection;
 
-    public TaskListDAOImpl(Connection connection) {
-        this.connection = connection;
+    private Session session;
+
+    public TaskListDAOImpl(Session session){
+        this.session=session;
     }
 
     @Override
-    public TaskList save(TaskList list) {
-        try {
-            if (!existById(list.getId())) {
-                PreparedStatement stm = connection.prepareStatement("INSERT INTO task_list (name, user_id) VALUES (?,?)",Statement.RETURN_GENERATED_KEYS);
-                stm.setString(1, list.getName());
-                stm.setString(2, list.getUserId());
-                ResultSet rst = stm.getGeneratedKeys();
-                rst.next();
-                list.setId(rst.getInt(1));
-                if (stm.executeUpdate() != 1) {
-                    throw new SQLException("Failed to save the user");
-                }
-            } else {
-                PreparedStatement stm = connection.prepareStatement("UPDATE task_list SET name=?, user_id=? WHERE id=?");
-                stm.setString(1, list.getName());
-                stm.setString(2, list.getUserId());
-                stm.setInt(3, list.getId());
-                if (stm.executeUpdate() != 1) {
-                    throw new SQLException("Failed to update the user");
-                }
-            }
-            return list;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+    public boolean existById(Integer pk) {
+    return findById(pk).isPresent();
     }
 
     @Override
-    public void deleteById(Integer listId) {
-        try {
-            if (!existById(listId)) {
-                throw new DataAccessException("No user Found!");
-            }
-            PreparedStatement stm = connection.prepareStatement("DELETE FROM task_list WHERE id=?");
-            stm.setInt(1, listId);
-            if (stm.executeUpdate() != 1) {
-                throw new SQLException("Failed to delete the user");
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
+    public TaskList save(TaskList entity) {
+      session.save(entity);
+      return entity;
     }
 
     @Override
-    public Optional<TaskList> findById(Integer listId) {
-        try {
-            PreparedStatement stm = connection.prepareStatement("SELECT * FROM task_list WHERE id=?");
-            stm.setInt(1, listId);
-            ResultSet rst = stm.executeQuery();
-            if (rst.next()) {
-                return Optional.of(new TaskList(rst.getInt("id"),
-                        rst.getString("name"),
-                        rst.getString("user_id")));
-            } else {
-                return Optional.empty();
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+    public void deleteById(Integer pk) {
+
+        session.delete(session.load(TaskList.class,pk));
     }
 
     @Override
-    public boolean existById(Integer listId) {
-        try {
-            PreparedStatement stm = connection.prepareStatement("SELECT id FROM task_list WHERE id=?");
-            stm.setInt(1, listId);
-            return stm.executeQuery().next();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    public Optional<TaskList> findById(Integer pk) {
+        TaskList taskList = session.get(TaskList.class, pk);
+        return (taskList==null)?Optional.empty():Optional.of(taskList);
 
+    }
 
     @Override
     public List<TaskList> findAll() {
-        try {
-            Statement stm = connection.createStatement();
-            ResultSet rst = stm.executeQuery("SELECT * FROM task_list");
-            List<TaskList> tasks = new ArrayList<>();
-            while (rst.next()) {
-                tasks.add(new TaskList(rst.getInt("id"),
-                        rst.getString("name"),
-                        rst.getString("user_id")));
-            }
-            return tasks;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        return session.createQuery("FROM TaskList tl",TaskList.class).list();
     }
 
     @Override
     public long count() {
-        try {
-            Statement stm = connection.createStatement();
-            ResultSet rst = stm.executeQuery("SELECT COUNT(*) AS count FROM task_list");
-            if (rst.next()) {
-                return rst.getLong("count");
-            }
-            return 0;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+       return session.createQuery("SELECT COUNT(tl) FROM TaskList",Long.class).uniqueResult();
     }
-
 
     @Override
     public boolean existTaskListByIdAndUserId(int taskListId, String userId) {
-        try {
-            PreparedStatement stm = connection.prepareStatement("SELECT * FROM task_list t WHERE t.id=? AND t.user_id=?");
-            stm.setInt(1, taskListId);
-            stm.setString(2, userId);
-            return stm.executeQuery().next();
-
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-
-    public Optional<TaskList> getTaskListByIdAndUserId(int taskListId, String userId) {
-        try {
-            PreparedStatement stm = connection.prepareStatement("SELECT * FROM task_list t WHERE t.id=? AND t.user_id=?");
-            stm.setInt(1, taskListId);
-            stm.setString(2, userId);
-            ResultSet rst = stm.executeQuery();
-            if (stm.executeQuery().next()){
-                return Optional.of(new TaskList(rst.getInt("id"),rst.getString("name"),
-                        rst.getString("userId")));
-            }else {
-                return Optional.empty();
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        return false;
     }
 
     @Override
-    public Optional<List<TaskList>> findByUserId(String userId) {
-        ArrayList<TaskList> taskLists;
-        try {
-            PreparedStatement stm = connection.
-                    prepareStatement("SELECT * FROM task_list t WHERE t.user_id=?");
-            stm.setString(1, userId);
-            ResultSet rst = stm.executeQuery();
-            taskLists = new ArrayList<>();
-            while (rst.next()) {
-                int id = rst.getInt("id");
-                String title = rst.getString("name");
-                taskLists.add(new TaskList(id, title, userId));
-            }
-        } catch (SQLException e) {
-            throw new DataAccessException("Failed to fetch the TaskLists");
-        }
-        return Optional.of(taskLists);
+    public Optional<TaskList> getTaskListByIdAndUserId(int taskListId, String userId) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<TaskList> findByUserId(String userId) {
+        return Optional.empty();
     }
 }
