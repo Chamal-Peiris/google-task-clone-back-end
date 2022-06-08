@@ -1,5 +1,6 @@
 package lk.ijse.dep8.tasks.service.util;
 
+import lk.ijse.dep8.tasks.entities.User;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
@@ -12,11 +13,13 @@ public class HibernateUtil {
    private static final SessionFactory sessionFactory = buildSessionFactory();
 
    private static SessionFactory buildSessionFactory() {
+
+      String profile=System.getProperty("app.profiles.active","dev");
       StandardServiceRegistry standardRegistry = new StandardServiceRegistryBuilder()
-              .loadProperties("application.properties")
+              .loadProperties(profile.equals("dev")?"application-dev.properties":"application-prod.properties")
               .build();
 
-      Metadata metadata = new MetadataSources(standardRegistry)
+      Metadata metadata = new MetadataSources(standardRegistry).addAnnotatedClass(User.class)
               .getMetadataBuilder()
               .applyImplicitNamingStrategy(ImplicitNamingStrategyJpaCompliantImpl.INSTANCE)
               .build();
