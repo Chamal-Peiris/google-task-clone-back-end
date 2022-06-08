@@ -93,7 +93,7 @@ public class UserServlet extends HttpServlet2 {
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         UserDTO user = getUser(req);
         try  {
-            UserService userService = ServiceFactory.getInstance().getService(ServiceFactory.ServiceTypes.USER);s
+            UserService userService = ServiceFactory.getInstance().getService(ServiceFactory.ServiceTypes.USER);
             userService .deleteUser( user.getId(),
                     getServletContext().getRealPath("/"));
             resp.setStatus(HttpServletResponse.SC_NO_CONTENT);

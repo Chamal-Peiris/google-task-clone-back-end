@@ -1,70 +1,48 @@
 package lk.ijse.dep8.tasks.dao.custom.impl;
 
 import lk.ijse.dep8.tasks.dao.custom.TaskDAO;
+import lk.ijse.dep8.tasks.dao.exception.DataAccessException;
 import lk.ijse.dep8.tasks.entities.Task;
 
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class TaskDAOImpl implements TaskDAO  {
-    @Override
-    public boolean existById(Integer pk) {
-        return false;
+
+    private Connection connection;
+
+    public TaskDAOImpl(Connection connection) {
+        this.connection = connection;
     }
 
     @Override
-    public Task save(Task entity) {
-        return null;
-    }
-
-    @Override
-    public void deleteById(Integer pk) {
-
-    }
-
-    @Override
-    public Optional<Task> findById(Integer pk) {
-        return Optional.empty();
-    }
-
-    @Override
-    public List<Task> findAll() {
-        return null;
-    }
-
-    @Override
-    public long count() {
-        return 0;
-    }
-  /*  private Connection connection;
-
-
-    public TaskDAOImpl(Connection connection){
-        this.connection=connection;
-    }
-    @Override
-    public Object save(Object task){
+    public Task save(Task task) {
         try {
-            if (!existsTaskById(task.getId())){
-                PreparedStatement stm = connection.prepareStatement("INSERT INTO task (title, details, position, status, task_list_id) VALUES (?,?,?,?,?)");
-                stm.setString(1,task.getTitle());
-                stm.setString(2,task.getDetails());
-                stm.setInt(3,task.getPosition());
-                stm.setString(4,task.getStatus().toString());
-                stm.setInt(5,task.getTaskListId());
-                if (stm.executeUpdate()!=1){
-                    throw new SQLException("Failed to save the user");
+            if (!existById(task.getId())) {
+                PreparedStatement stm = connection.prepareStatement("INSERT INTO task (title, details, position, status, task_list_id) VALUES (?,?,?,?,?)",Statement.RETURN_GENERATED_KEYS);
+                stm.setString(1, task.getTitle());
+                stm.setString(2, task.getDetails());
+                stm.setInt(3, task.getPosition());
+                stm.setString(4, task.getStatus().toString());
+                stm.setInt(5, task.getTaskListId());
+                if (stm.executeUpdate() != 1) {
+                    throw new SQLException("Failed to save the Task");
                 }
-            }else {
+                ResultSet rst = stm.getGeneratedKeys();
+                rst.next();
+                task.setId(rst.getInt(1));
+            } else {
                 PreparedStatement stm = connection.prepareStatement("UPDATE task SET title=?, details =?, position=?, status=?, task_list_id=? WHERE id=?");
-                stm.setString(1,task.getTitle());
-                stm.setString(2,task.getDetails());
-                stm.setInt(3,task.getPosition());
-                stm.setString(4,task.getStatus().toString());
-                stm.setInt(5,task.getTaskListId());
-                stm.setInt(6,task.getId());
-                if (stm.executeUpdate()!=1){
-                    throw new SQLException("Failed to update the user");
+                stm.setString(1, task.getTitle());
+                stm.setString(2, task.getDetails());
+                stm.setInt(3, task.getPosition());
+                stm.setString(4, task.getStatus().toString());
+                stm.setInt(5, task.getTaskListId());
+                stm.setInt(6, task.getId());
+                if (stm.executeUpdate() != 1) {
+                    throw new SQLException("Failed to update the Task");
                 }
             }
             return task;
@@ -72,37 +50,38 @@ public class TaskDAOImpl implements TaskDAO  {
             throw new RuntimeException(e);
         }
     }
+
     @Override
-    public void deleteById(Object taskId){
+    public void deleteById(Integer taskId) {
         try {
-            if (!existsTaskById(taskId)){
-                throw new DataAccessException("No user Found!");
+            if (!existById(taskId)) {
+                throw new DataAccessException("No Task Found!");
             }
             PreparedStatement stm = connection.prepareStatement("DELETE FROM task WHERE id=?");
-            stm.setInt(1,taskId);
-            if (stm.executeUpdate()!=1){
-                throw new SQLException("Failed to delete the user");
+            stm.setInt(1, taskId);
+            if (stm.executeUpdate() != 1) {
+                throw new DataAccessException("Failed to delete the Task");
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new DataAccessException("Failed to delete the Task");
         }
 
     }
 
     @Override
-    public Optional<Object> findById(Object taskId){
+    public Optional<Task> findById(Integer taskId) {
         try {
             PreparedStatement stm = connection.prepareStatement("SELECT * FROM task WHERE id=?");
-            stm.setInt(1,taskId);
+            stm.setInt(1, taskId);
             ResultSet rst = stm.executeQuery();
-            if (rst.next()){
+            if (rst.next()) {
                 return Optional.of(new Task(rst.getInt("id"),
                         rst.getString("title"),
                         rst.getString("details"),
                         rst.getInt("position"),
                         Task.Status.valueOf(rst.getString("status")),
                         rst.getInt("task_list_id")));
-            }else {
+            } else {
                 return Optional.empty();
             }
         } catch (SQLException e) {
@@ -110,11 +89,12 @@ public class TaskDAOImpl implements TaskDAO  {
         }
     }
 
+
     @Override
-    public boolean existById(Object taskId){
+    public boolean existById(Integer taskId) {
         try {
             PreparedStatement stm = connection.prepareStatement("SELECT * FROM task WHERE id=?");
-            stm.setInt(1,taskId);
+            stm.setInt(1, taskId);
             return stm.executeQuery().next();
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -122,12 +102,12 @@ public class TaskDAOImpl implements TaskDAO  {
     }
 
     @Override
-    public List<Object> findAllTasks(Object taskId){
+    public List<Task> findAll() {
         try {
             Statement stm = connection.createStatement();
             ResultSet rst = stm.executeQuery("SELECT * FROM task");
             List<Task> tasks = new ArrayList<>();
-            while (rst.next()){
+            while (rst.next()) {
                 tasks.add(new Task(rst.getInt("id"),
                         rst.getString("title"),
                         rst.getString("details"),
@@ -141,11 +121,12 @@ public class TaskDAOImpl implements TaskDAO  {
         }
     }
 
-    public long countTasks(){
+    @Override
+    public long count() {
         try {
             Statement stm = connection.createStatement();
             ResultSet rst = stm.executeQuery("SELECT COUNT(*) AS count FROM task");
-            if (rst.next()){
+            if (rst.next()) {
                 return rst.getLong("count");
             }
             return 0;
@@ -153,5 +134,47 @@ public class TaskDAOImpl implements TaskDAO  {
             throw new RuntimeException(e);
         }
     }
-*/
+
+    @Override
+    public Optional<List<Task>> findByTaskListId(Integer taskListId) {
+        try {
+            PreparedStatement stm = connection.prepareStatement("SELECT * FROM task WHERE task.task_list_id = ? ORDER BY position");
+            stm.setInt(1, taskListId);
+            ResultSet rst = stm.executeQuery();
+            List<Task> tasks = new ArrayList<>();
+            while (rst.next()) {
+                int id = rst.getInt("id");
+                String title = rst.getString("title");
+                String details = rst.getString("details");
+                int position = rst.getInt("position");
+                String status = rst.getString("status");
+                tasks.add(new Task(id, title, details, position, Task.Status.valueOf(status), taskListId));
+            }
+            if (!tasks.isEmpty()){
+                return Optional.of(tasks);
+            }else {
+                return Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void pushUp(Connection connection, int pos, int taskListId) throws SQLException {
+        PreparedStatement pstm = connection.
+                prepareStatement("UPDATE task t SET position = position - 1 WHERE t.position >= ? AND t.task_list_id = ? ORDER BY t.position");
+        pstm.setInt(1, pos);
+        pstm.setInt(2, taskListId);
+        pstm.executeUpdate();
+    }
+
+    @Override
+    public void pushDown(Connection connection, int pos, int taskListId) throws SQLException {
+        PreparedStatement pstm = connection.
+                prepareStatement("UPDATE task t SET position = position - 1 WHERE t.position >= ? AND t.task_list_id = ? ORDER BY t.position");
+        pstm.setInt(1, pos);
+        pstm.setInt(2, taskListId);
+        pstm.executeUpdate();
+    }
 }

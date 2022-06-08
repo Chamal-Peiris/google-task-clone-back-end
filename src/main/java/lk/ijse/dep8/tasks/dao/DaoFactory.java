@@ -26,9 +26,9 @@ public class DaoFactory {
             case USER:
                 return (T) new UserDAOImpl(connection);
             case TASK_LIST:
-                return (T) new TaskListDAOImpl();
+                return (T) new TaskListDAOImpl(connection);
             case TASK:
-                return (T) new TaskDAOImpl();
+                return (T) new TaskDAOImpl(connection);
             case QUERY_DAO:
                 return (T) new QueryDAOImpl(connection);
             default:
@@ -40,17 +40,17 @@ public class DaoFactory {
         USER,TASK_LIST,TASK,QUERY_DAO;
     }
 
-    public UserDAO getUserDao(Connection connection){
+   /* public UserDAO getUserDao(Connection connection){
         return new UserDAOImpl(connection);
     }
     public TaskListDAO getTaskListDao(Connection connection){
         return new TaskListDAOImpl();
     }
     public TaskDAO getTaskDao(Connection connection){
-        return new TaskDAOImpl();
+        return new TaskDAOImpl(connection);
     }
     public QueryDAO getQueryDao(Connection connection){
         return new QueryDAOImpl(connection);
-    }
+    }*/
 
 }
