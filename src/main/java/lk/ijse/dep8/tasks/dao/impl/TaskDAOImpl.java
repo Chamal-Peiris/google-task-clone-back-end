@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class TaskDAOImpl extends CrudDAOImpl<Task, Integer> implements TaskDAO  {
-    private Session session;
+    //private Session session;
 
     public TaskDAOImpl(Session session) {
         this.session = session;

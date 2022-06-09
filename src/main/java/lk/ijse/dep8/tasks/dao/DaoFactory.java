@@ -1,7 +1,5 @@
 package lk.ijse.dep8.tasks.dao;
 
-import lk.ijse.dep8.tasks.dao.impl.UserDAOImpl;
-
 import java.sql.Connection;
 
 public class DaoFactory {
@@ -16,7 +14,7 @@ public class DaoFactory {
     public <T extends SuperDAO>T getDao(Connection connection, DAOTypes daoType){
         switch (daoType){
             case USER:
-                return (T) new UserDAOImpl(connection);
+              //  return (T) new UserDAOImpl(connection);
             case TASK_LIST:
               //  return (T) new TaskListDAOImpl(connection);
             case TASK:

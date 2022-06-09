@@ -1,6 +1,5 @@
-package lk.ijse.dep8.tasks.dao.impl;
+package lk.ijse.dep8.tasks.dao;
 
-import lk.ijse.dep8.tasks.dao.CrudDao;
 import lk.ijse.dep8.tasks.entities.SuperEntity;
 import org.hibernate.Session;
 
@@ -11,40 +10,42 @@ import java.util.Optional;
 
 public abstract class CrudDAOImpl<T extends SuperEntity, ID extends Serializable> implements CrudDao<T, ID> {
 
+    private final Class<T> entityClsObj;
     protected Session session;
 
-    private Class<T> entityClassObj;
-
     public CrudDAOImpl() {
-        Class<T> actualTypeArgument = (Class<T>) ((ParameterizedType) (this.getClass().getGenericSuperclass())).getActualTypeArguments()[0];
+        entityClsObj = (Class<T>) (((ParameterizedType) (this.getClass().getGenericSuperclass())).getActualTypeArguments()[0]);
     }
 
     @Override
     public boolean existById(ID pk) {
-        return false;
+        return findById(pk).isPresent();
     }
 
     @Override
     public T save(T entity) {
-        return null;
+        session.save(entity);
+        return entity;
     }
 
     @Override
     public void deleteById(ID pk) {
+        session.delete(session.load(entityClsObj, pk));
     }
 
     @Override
     public Optional<T> findById(ID pk) {
-        return Optional.empty();
+        T entity = session.get(entityClsObj, pk);
+        return (entity == null) ? Optional.empty() : Optional.of(entity);
     }
 
     @Override
     public List<T> findAll() {
-        return null;
+        return session.createQuery("FROM " + entityClsObj.getName(), entityClsObj).list();
     }
 
     @Override
     public long count() {
-        return 0;
+        return session.createQuery("SELECT COUNT(entity) FROM "+ entityClsObj.getName() +" entity", Long.class).uniqueResult();
     }
 }

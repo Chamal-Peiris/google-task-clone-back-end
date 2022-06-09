@@ -1,6 +1,6 @@
 package lk.ijse.dep8.tasks.dao.custom.impl;
 
-import lk.ijse.dep8.tasks.dao.impl.UserDAOImpl2;
+import lk.ijse.dep8.tasks.dao.impl.UserDAOImpl;
 import lk.ijse.dep8.tasks.entities.User;
 import lk.ijse.dep8.tasks.service.util.HibernateUtil;
 import org.hibernate.Session;
@@ -15,14 +15,14 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
 class UserDAOImpl2Test {
 
-    private UserDAOImpl2 userDAO;
+    private UserDAOImpl userDAO;
     private Session session;
 
     @BeforeEach
     void setup() {
         session = HibernateUtil.getSessionFactory().openSession();
         session.beginTransaction();
-        userDAO = new UserDAOImpl2(session);
+        userDAO = new UserDAOImpl(session);
 
     }
 
