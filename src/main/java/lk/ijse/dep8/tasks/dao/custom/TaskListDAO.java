@@ -7,8 +7,8 @@ import java.util.Optional;
 
 public interface TaskListDAO extends CrudDao<TaskList,Integer> {
 
-    boolean existTaskListByIdAndUserId(int taskListId,String userId);
-    Optional<TaskList> getTaskListByIdAndUserId(int taskListId, String userId);
-    Optional<TaskList> findByUserId(String userId);
+//    boolean existTaskListByIdAndUserId(int taskListId,String userId);
+//    Optional<TaskList> getTaskListByIdAndUserId(int taskListId, String userId);
+//    Optional<TaskList> findByUserId(String userId);
 
 }

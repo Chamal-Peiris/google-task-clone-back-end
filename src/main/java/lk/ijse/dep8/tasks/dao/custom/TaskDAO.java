@@ -10,8 +10,7 @@ import java.util.Optional;
 
 public interface TaskDAO extends CrudDao<Task,Integer> {
 
-    Optional<List<Task>> findByTaskListId(Integer taskListId);
-    void pushUp(Connection connection, int pos, int taskListId) throws SQLException;
-    void pushDown(Connection connection, int pos, int taskListId) throws SQLException;
+
+
 
 }

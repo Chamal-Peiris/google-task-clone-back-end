@@ -1,16 +1,13 @@
 package lk.ijse.dep8.tasks.dao.custom.impl;
 
-import com.sun.org.apache.xml.internal.utils.res.XResources_de;
+import lk.ijse.dep8.tasks.dao.impl.UserDAOImpl2;
 import lk.ijse.dep8.tasks.entities.User;
 import lk.ijse.dep8.tasks.service.util.HibernateUtil;
 import org.hibernate.Session;
 import org.junit.jupiter.api.*;
-import org.modelmapper.internal.util.Assert;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 

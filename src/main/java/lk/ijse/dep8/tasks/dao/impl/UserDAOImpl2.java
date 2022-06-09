@@ -1,4 +1,4 @@
-package lk.ijse.dep8.tasks.dao.custom.impl;
+package lk.ijse.dep8.tasks.dao.impl;
 
 import lk.ijse.dep8.tasks.dao.custom.UserDAO;
 import lk.ijse.dep8.tasks.entities.User;
@@ -9,7 +9,7 @@ import javax.jws.soap.SOAPBinding;
 import java.util.List;
 import java.util.Optional;
 
-public class UserDAOImpl2 implements UserDAO {
+public class UserDAOImpl2 extends CrudDAOImpl<User,String> implements UserDAO {
 private Session session;
 
 public UserDAOImpl2(Session session){

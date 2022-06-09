@@ -4,17 +4,24 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.*;
 import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@Entity
 public class Task implements SuperEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
     String title;
     String details;
     int position;
+    @Enumerated(EnumType.STRING)
     Status status;
-    int taskListId;
+    @JoinColumn(name = "task_list_id",referencedColumnName = "id",nullable = false)
+    @ManyToOne
+    TaskList taskListId;
 
 
 

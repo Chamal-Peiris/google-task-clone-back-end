@@ -1,11 +1,9 @@
 package lk.ijse.dep8.tasks.service.custom.impl;
 
 import lk.ijse.dep8.tasks.dao.DaoFactory;
-import lk.ijse.dep8.tasks.dao.SuperDAO;
 import lk.ijse.dep8.tasks.dao.custom.QueryDAO;
 import lk.ijse.dep8.tasks.dao.custom.TaskDAO;
 import lk.ijse.dep8.tasks.dao.custom.TaskListDAO;
-import lk.ijse.dep8.tasks.dao.custom.impl.TaskDAOImpl;
 import lk.ijse.dep8.tasks.dto.TaskDTO;
 import lk.ijse.dep8.tasks.dto.UserDTO;
 import lk.ijse.dep8.tasks.entities.Task;
