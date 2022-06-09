@@ -14,10 +14,10 @@ class DaoFactoryTest {
     @Test
     void getDao() {
         Connection mockConection=mock(Connection.class);
-        UserDAO userDao = DaoFactory.getInstance().getDao(mockConection, DaoFactory.DAOTypes.USER);
-        TaskDAO taskDao= DaoFactory.getInstance().getDao(mockConection, DaoFactory.DAOTypes.TASK);
-        TaskListDAO taskListDao = DaoFactory.getInstance().getDao(mockConection, DaoFactory.DAOTypes.TASK_LIST);
-        QueryDAO queryDao = DaoFactory.getInstance().getDao(mockConection, DaoFactory.DAOTypes.QUERY_DAO);
+        UserDAO userDao = DAOFactory.getInstance().getDAO(mockConection, DAOFactory.DAOTypes.USER);
+        TaskDAO taskDao= DAOFactory.getInstance().getDAO(mockConection, DAOFactory.DAOTypes.TASK);
+        TaskListDAO taskListDao = DAOFactory.getInstance().getDAO(mockConection, DAOFactory.DAOTypes.TASK_LIST);
+        QueryDAO queryDao = DAOFactory.getInstance().getDAO(mockConection, DAOFactory.DAOTypes.QUERY_DAO);
 
     }
 }

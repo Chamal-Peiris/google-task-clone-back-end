@@ -1,6 +1,6 @@
 package lk.ijse.dep8.tasks.service.custom.impl;
 
-import lk.ijse.dep8.tasks.dao.DaoFactory;
+import lk.ijse.dep8.tasks.dao.DAOFactory;
 import lk.ijse.dep8.tasks.dao.custom.QueryDAO;
 import lk.ijse.dep8.tasks.dao.custom.TaskDAO;
 import lk.ijse.dep8.tasks.dao.custom.TaskListDAO;
@@ -38,7 +38,7 @@ public class TaskServiceImpl implements TaskService {
     public TaskDTO saveTask(int taskListId, String userId, TaskDTO task) {
         try {
             Connection connection = dataSource.getConnection();
-            TaskListDAO taskListDAO = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.TASK_LIST);
+            TaskListDAO taskListDAO = DAOFactory.getInstance().getDAO(connection, DAOFactory.DAOTypes.TASK_LIST);
             boolean isExists = taskListDAO.existTaskListByIdAndUserId(taskListId, userId);
             if (isExists){
                 throw new FailedExecutionException("Invalid user id or Task list id");
@@ -48,7 +48,7 @@ public class TaskServiceImpl implements TaskService {
             }
             connection.setAutoCommit(false);
             pushDown(connection, 0, taskListId);
-            TaskDAO taskDAO = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.TASK);
+            TaskDAO taskDAO = DAOFactory.getInstance().getDAO(connection, DAOFactory.DAOTypes.TASK);
             Task taskEntity = EntityDtoMapper.getTask(task);
             Task save = taskDAO.save(taskEntity);
             connection.commit();
@@ -63,11 +63,11 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public Optional<List<TaskDTO>> getAllTasks(int taskListId, String userId) {
         try (Connection connection = dataSource.getConnection()) {
-            TaskListDAO taskListDAOImpl = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.TASK_LIST);
+            TaskListDAO taskListDAOImpl = DAOFactory.getInstance().getDAO(connection, DAOFactory.DAOTypes.TASK_LIST);
             if (!taskListDAOImpl.existTaskListByIdAndUserId(taskListId, userId)) {
                 throw new FailedExecutionException("TaskList is not exists!");
             }
-            TaskDAO taskDAOImpl = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.TASK);
+            TaskDAO taskDAOImpl = DAOFactory.getInstance().getDAO(connection, DAOFactory.DAOTypes.TASK);
             Optional<List<Task>> list = taskDAOImpl.findByTaskListId(taskListId);
             if (list.isPresent()) {
                 List<TaskDTO> taskDTOs = new ArrayList<>();
@@ -89,7 +89,7 @@ public class TaskServiceImpl implements TaskService {
         Connection connection=null;
         try {
             connection = dataSource.getConnection();
-            QueryDAO queryDAO = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.QUERY_DAO);
+            QueryDAO queryDAO = DAOFactory.getInstance().getDAO(connection, DAOFactory.DAOTypes.QUERY_DAO);
             Task task = (Task) queryDAO.getTask(taskId, taskListId, userId);
             return Optional.of(EntityDtoMapper.getTaskDTO(task));
         } catch (SQLException e) {
@@ -102,11 +102,11 @@ public class TaskServiceImpl implements TaskService {
         Connection connection=null;
         try {
             connection = dataSource.getConnection();
-            QueryDAO queryDAO = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.QUERY_DAO);
+            QueryDAO queryDAO = DAOFactory.getInstance().getDAO(connection, DAOFactory.DAOTypes.QUERY_DAO);
             Task task = (Task) queryDAO.getTask(taskId, taskListId, userId);
             connection.setAutoCommit(false);
             pushUp(connection,task.getPosition(),task.getTaskListId());
-            TaskDAO taskDAO = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.TASK);
+            TaskDAO taskDAO = DAOFactory.getInstance().getDAO(connection, DAOFactory.DAOTypes.TASK);
             taskDAO.deleteById(task.getId());
             connection.commit();
         } catch (SQLException e) {
@@ -126,7 +126,7 @@ public class TaskServiceImpl implements TaskService {
         Connection connection=null;
         try {
             connection = dataSource.getConnection();
-            QueryDAO queryDAO = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.QUERY_DAO);
+            QueryDAO queryDAO = DAOFactory.getInstance().getDAO(connection, DAOFactory.DAOTypes.QUERY_DAO);
             Task oldTask = (Task) queryDAO.getTask(taskId, taskListId, userId);
 
             if (newTask.getTitle() == null || newTask.getTitle().trim().isEmpty()) {
@@ -140,7 +140,7 @@ public class TaskServiceImpl implements TaskService {
                 pushUp(connection, oldTask.getPosition(), oldTask.getTaskListId());
                 pushDown(connection, newTask.getPosition(), oldTask.getTaskListId());
             }
-            TaskDAO taskDAO = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.TASK);
+            TaskDAO taskDAO = DAOFactory.getInstance().getDAO(connection, DAOFactory.DAOTypes.TASK);
             Task task = EntityDtoMapper.getTask(newTask);
             taskDAO.save(task);
             connection.commit();
@@ -185,13 +185,13 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void pushUp(Connection connection, int pos, int taskListId) throws SQLException {
 
-        TaskDAO daoImpl = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.TASK);
+        TaskDAO daoImpl = DAOFactory.getInstance().getDAO(connection, DAOFactory.DAOTypes.TASK);
         daoImpl.pushUp(connection,pos,taskListId);
     }
 
     @Override
     public void pushDown(Connection connection, int pos, int taskListId) throws SQLException {
-        TaskDAO daoImpl = DaoFactory.getInstance().getDao(connection, DaoFactory.DAOTypes.TASK);
+        TaskDAO daoImpl = DAOFactory.getInstance().getDAO(connection, DAOFactory.DAOTypes.TASK);
         daoImpl.pushDown(connection,pos,taskListId);
     }
 }
